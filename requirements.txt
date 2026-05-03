@@ -1,0 +1,26 @@
+#database, orm, migrations
+asyncpg~=0.31.0
+sqlalchemy~=2.0.49
+alembic~=1.18.4
+
+#api
+fastapi~=0.136.1
+uvicorn~=0.46.0
+
+#validation
+pydantic[email]~=2.13.3
+pydantic-settings~=2.14.0
+
+#di
+dishka~=1.10.1
+
+#pass
+bcrypt~=5.0.0
+
+#logging
+loguru~=0.7.3
+
+#linter, formater
+ruff~=0.15.12
+
+
