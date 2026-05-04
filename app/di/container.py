@@ -52,7 +52,7 @@ class UnitOfWorkProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    async def user_uow(self, async_session: AsyncSession) -> AsyncGenerator[Any, Any]:
+    async def user_uow(self, async_session: AsyncSession) -> AsyncGenerator[UserUnitOfWork, None]:
         async with UserUnitOfWork(async_session) as user_uow:
             yield user_uow
 
@@ -88,6 +88,7 @@ def build_async_container() -> AsyncContainer:
         AsyncEngineProvider(),
         AsyncSessionMakerProvider(),
         AsyncSessionProvider(),
+        UnitOfWorkProvider(),
         UserServiceProvider()
     )
 

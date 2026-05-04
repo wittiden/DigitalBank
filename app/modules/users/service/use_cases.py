@@ -11,13 +11,13 @@ class CreateUserService:
     def __init__(self, user_uow: 'UserUnitOfWork') -> None:
         self._user_uow = user_uow
 
-    def create_user(self, name: str, email: str, password: str) -> 'FullUserInfoDTO':
+    async def create_user(self, name: str, email: str, password: str) -> 'FullUserInfoDTO':
         password_hash = hash_pass(password)
-        user: 'UserModel' = self._user_uow.user_commands.insert_user_info(name=name, email=email, password_hash=password_hash, user_status=UserStatusesEnum.USER)
+        user: 'UserModel' = await self._user_uow.user_commands.insert_user_info(name=name, email=email, password_hash=password_hash, user_status=UserStatusesEnum.USER)
 
-        self._user_uow.commit()
+        await self._user_uow.commit()
 
-        return FullUserInfoDTO(user_id=user.user_id, name=user.name, email=user.email, password_hash=user.password_hash, is_blocked=user.is_blocked, user_status=user.user_status)
+        return FullUserInfoDTO.model_validate(user)
 
 
 
