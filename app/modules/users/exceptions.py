@@ -1,4 +1,4 @@
-class ObjNotFoundError(Exception):
+class UserNotFoundError(Exception):
     pass
 
 
