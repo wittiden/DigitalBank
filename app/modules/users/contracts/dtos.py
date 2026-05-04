@@ -15,3 +15,12 @@ class FullUserInfoDTO(BaseModel):
     user_status: UserStatusesEnum
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SecurityUserInfoDTO(BaseModel):
+    """DTO схема для передачи безопасных данных пользователя"""
+
+    name: str
+    email: str
+
+    model_config = ConfigDict(from_attributes=True)

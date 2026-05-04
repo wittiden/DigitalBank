@@ -1,15 +1,22 @@
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 from app.common.enums.user_enums import UserStatusesEnum
 
 
 class FullUserInfoResponse(BaseModel):
-    """DTO схема для передачи полных данных пользователя"""
+    """Схема для ответа с полными данными пользователя"""
 
     user_id: UUID
     name: str
-    email: str
+    email: EmailStr
     password_hash: str
     is_blocked: bool
     user_status: UserStatusesEnum
+
+
+class SecurityUserInfoResponse(BaseModel):
+    """Схема для ответа с безопасными данными пользователя"""
+
+    name: str
+    email: EmailStr

@@ -1,4 +1,7 @@
+from typing import Any
 import bcrypt
+
+from app.modules.users.exceptions import UserNotFoundError
 
 
 def hash_pass(password: str) -> str:
@@ -8,4 +11,7 @@ def hash_pass(password: str) -> str:
 
 
 def verify_pass(password: str, password_hash: str) -> bool:
-    return bcrypt.checkpw(password.encode(), password_hash.encode())
+    try:
+        return bcrypt.checkpw(password.encode(), password_hash.encode())
+    except Exception:
+        return False
