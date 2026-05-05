@@ -93,7 +93,7 @@ class UpdateUserService:
         self._user_uow = user_uow
 
     @debug_log
-    async def portion_update_user(self, email: str, password: str, data: dict[str, Any]) -> 'FullUserInfoDTO':
+    async def partial_update_user(self, email: str, password: str, data: dict[str, Any]) -> 'FullUserInfoDTO':
         obj = await self._user_uow.user_queries.select_user_by_email(email)
 
         if not obj:

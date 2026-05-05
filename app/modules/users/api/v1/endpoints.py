@@ -26,7 +26,7 @@ async def create_admin_endpoint(schema: CreateUserSchema, service: FromDishka[Cr
 @user_router.patch('/update', response_model=SecurityUserInfoResponse, tags=['user', 'update'], summary='Update user')
 @inject
 async def update_user_endpoint(schema: UpdateUserSchema, service: FromDishka[UpdateUserService]):
-    obj = await service.portion_update_user(schema.email, schema.password, schema.data)
+    obj = await service.partial_update_user(schema.email, schema.password, schema.data)
     return obj
 
 
