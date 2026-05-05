@@ -29,4 +29,5 @@ class UserCommandsRepository:
 
     async def delete_user(self, user: 'UserModel') -> None:
         await self._async_session.delete(user)
+
         await self._async_session.flush()

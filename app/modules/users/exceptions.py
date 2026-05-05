@@ -1,33 +1,33 @@
-class AppError(Exception):
+class UserRouterError(Exception):
     status_code: int = 400
-    detail: str = 'Application error'
+    detail: str = 'User router error'
 
 
-class UserNotFoundError(AppError):
+class UserNotFoundError(UserRouterError):
     status_code: int = 404
     detail: str = 'User not Found'
 
 
-class InvalidFieldError(AppError):
+class InvalidFieldError(UserRouterError):
     status_code: int = 400
     detail: str = 'Invalid user field'
 
 
-class UserEmailIsExistError(AppError):
+class UserEmailIsExistError(UserRouterError):
     status_code: int = 409
     detail: str = 'User email already exist'
 
 
-class UserPassNotVerifiedError(AppError):
+class UserPassNotVerifiedError(UserRouterError):
     status_code: int = 401
     detail: str = 'User password not verified'
 
 
-class UserIsBlockedError(AppError):
+class UserIsBlockedError(UserRouterError):
     status_code: int = 409
     detail: str = 'User already blocked'
 
 
-class UserIsNotBlockedError(AppError):
+class UserIsNotBlockedError(UserRouterError):
     status_code: int = 409
     detail: str = 'User already unblocked'
