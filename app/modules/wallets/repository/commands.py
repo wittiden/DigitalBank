@@ -1,9 +1,12 @@
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums.wallet_enums import WalletTypesEnum
-from app.database.models import UserModel, WalletModel
+from app.database.models import WalletModel
 from app.modules.wallets.exceptions import InvalidFieldError
+
+if TYPE_CHECKING:
+    from app.database.models import UserModel
 
 
 class WalletCommandsRepository:
@@ -12,8 +15,8 @@ class WalletCommandsRepository:
     def __init__(self, async_session: AsyncSession) -> None:
         self._async_session = async_session
 
-    async def create_wallet(self, pin: str, wallet_type: WalletTypesEnum, user: 'UserModel') -> 'WalletModel':
-        obj = WalletModel(pin_hash=pin, wallet_type=wallet_type, user_id=user.user_id)
+    async def create_wallet(self, pin_hash: str, wallet_type: WalletTypesEnum, user: 'UserModel') -> 'WalletModel':
+        obj = WalletModel(pin_hash=pin_hash, wallet_type=wallet_type, user_id=user.user_id)
 
         self._async_session.add(obj)
         await self._async_session.flush()
