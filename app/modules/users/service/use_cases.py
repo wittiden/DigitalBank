@@ -1,6 +1,7 @@
 from typing import Any, TYPE_CHECKING
 from sqlalchemy.exc import IntegrityError
 from uuid import UUID
+from loguru import logger
 
 from app.common.decorators import debug_log
 from app.common.enums.user_enums import UserStatusesEnum
@@ -34,6 +35,7 @@ class CreateUserService:
 
         await self._user_uow.commit()
 
+        logger.info(f'Пользователь #{entity.user_id} создан')
         return FullUserInfoDTO.model_validate(entity)
 
     @debug_log
@@ -61,6 +63,7 @@ class LoginUserService:
         if not verify_pass(password, obj.password_hash):
             raise UserPassNotVerifiedError('Password != password_hash')
 
+        logger.info(f'Вы вошли в аккаунт #{obj.user_id}')
         return FullUserInfoDTO.model_validate(obj)
 
 
@@ -79,6 +82,7 @@ class DeleteUserService:
 
         await self._user_uow.user_commands.delete_user(obj)
 
+        logger.info(f'Пользователь #{user_id} удален')
         await self._user_uow.commit()
 
 
@@ -111,6 +115,7 @@ class UpdateUserService:
 
         await self._user_uow.commit()
 
+        logger.info(f'Данные пользователя #{user.user_id} обновлены')
         return FullUserInfoDTO.model_validate(user)
 
 
@@ -162,6 +167,8 @@ class ManageUserService:
             raise UserIsBlockedError('User was already blocked')
 
         await self._user_uow.user_commands.partial_update_user(obj, {'is_blocked': True})
+
+        logger.info(f'Пользователь #{obj.user_id} заблокирован')
         await self._user_uow.commit()
 
     @debug_log
@@ -175,4 +182,6 @@ class ManageUserService:
             raise UserIsNotBlockedError('User was already unblocked')
 
         await self._user_uow.user_commands.partial_update_user(obj, {'is_blocked': False})
+
+        logger.info(f'Пользователь #{obj.user_id} разблокирован')
         await self._user_uow.commit()
