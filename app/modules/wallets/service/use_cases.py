@@ -32,7 +32,10 @@ class CreateWalletService:
         try:
             wallet = await self._wallet_uow.wallet_commands.create_wallet(pin_hash, wallet_type, user)
         except IntegrityError:
+            await self._wallet_uow.rollback()
             raise
+
+        await self._wallet_uow.commit()
 
         return FullWalletInfoDTO.model_validate(wallet)
 

@@ -14,29 +14,28 @@ class WalletUnitOfWork:
         self.wallet_commands = WalletCommandsRepository(async_session)
         self.wallet_queries = WalletQueriesRepository(async_session)
 
-    def __aenter__(self) -> 'WalletUnitOfWork':
+    async def __aenter__(self) -> 'WalletUnitOfWork':
         return self
 
-    def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
-                  exc_tb: TracebackType | None):
+    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None):
         try:
             if exc_type:
-                self._async_session.rollback()
+                await self._async_session.rollback()
 
             else:
-                self._async_session.commit()
+                await self._async_session.commit()
 
         except Exception:
-            self._async_session.rollback()
+            await self._async_session.rollback()
             raise
 
         finally:
-            self._async_session.close()
+            await self._async_session.close()
 
         return False
 
-    def commit(self) -> None:
-        self._async_session.commit()
+    async def commit(self) -> None:
+        await self._async_session.commit()
 
-    def rollback(self) -> None:
-        self._async_session.rollback()
+    async def rollback(self) -> None:
+        await self._async_session.rollback()
