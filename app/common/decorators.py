@@ -13,7 +13,7 @@ def debug_log(func: Callable[Concatenate[Self, P], Awaitable[T]]) -> Callable[Co
 
         logger.debug('Strat - {}', func.__name__)
 
-        result = func(self, *args, **kwargs)
+        result = await func(self, *args, **kwargs)
 
         logger.debug('End - {}', func.__name__)
 
