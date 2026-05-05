@@ -9,24 +9,30 @@ class InvalidFieldError(WalletRouterError):
 
 
 class WalletCreateError(WalletRouterError):
-    pass
+    status_code = 400
+    detail = 'Error while wallet created'
 
 
 class WalletNotFoundError(WalletRouterError):
-    pass
+    status_code = 404
+    detail = 'Wallet not found'
 
 
 class WalletIsBlockedError(WalletRouterError):
-    pass
+    status_code = 409
+    detail = 'Wallet already blocked'
 
 
 class WalletIsNotBlockedError(WalletRouterError):
-    pass
+    status_code = 409
+    detail = 'Wallet already unblocked'
 
 
 class WalletPinNotVerifiedError(WalletRouterError):
-    pass
+    status_code = 401
+    detail = 'Wallet pin not verified'
 
 
 class WalletLimitError(WalletRouterError):
-    pass
+    status_code = 403
+    detail = 'Wallet count limit'
