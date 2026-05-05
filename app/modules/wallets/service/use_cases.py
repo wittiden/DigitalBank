@@ -171,10 +171,10 @@ class ShowWalletService:
 
         return FullWalletInfoDTO.model_validate(obj)
 
-    async def show_wallets_by_user_id(self, user_id: UUID) -> list['FullWalletInfoDTO']:
+    async def show_wallets_by_user_id(self, user_id: UUID) -> list['SecurityWalletInfoDTO']:
         objs = await self._wallet_uow.wallet_queries.select_wallets_by_user_id(user_id)
 
-        return [FullWalletInfoDTO.model_validate(obj) for obj in objs]
+        return [SecurityWalletInfoDTO.model_validate(obj) for obj in objs]
 
     async def show_wallets(self, offset: int = 0, limit: int = 0) -> list['FullWalletInfoDTO']:
         objs = await self._wallet_uow.wallet_queries.select_wallets(offset, limit)
