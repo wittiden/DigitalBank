@@ -26,8 +26,14 @@ class UserUnitOfWork:
             else:
                 await self._async_session.commit()
 
+        except Exception:
+            await self._async_session.rollback()
+            raise
+
         finally:
             await self._async_session.close()
+
+        return False
 
     async def commit(self) -> None:
         await self._async_session.commit()

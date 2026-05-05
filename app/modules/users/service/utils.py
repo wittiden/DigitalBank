@@ -1,7 +1,4 @@
-from typing import Any
 import bcrypt
-
-from app.modules.users.exceptions import UserNotFoundError
 
 
 def hash_pass(password: str) -> str:

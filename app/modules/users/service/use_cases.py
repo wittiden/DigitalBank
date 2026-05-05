@@ -29,6 +29,7 @@ class CreateUserService:
                                                                                 password_hash=password_hash,
                                                                                 user_status=user_status)
         except IntegrityError:
+            await self._user_uow.rollback()
             raise UserEmailIsExistError(f'User email ({email}) must be unique')
 
         await self._user_uow.commit()
@@ -70,7 +71,7 @@ class DeleteUserService:
         self._user_uow = user_uow
 
     @debug_log
-    async def delete_user(self, user_id: UUID) -> None:
+    async def delete_user_by_id(self, user_id: UUID) -> None:
         obj = await self._user_uow.user_queries.select_user_by_id(user_id)
 
         if not obj:

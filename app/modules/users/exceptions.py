@@ -1,22 +1,33 @@
-class UserNotFoundError(Exception):
-    pass
+class AppError(Exception):
+    status_code: int = 400
+    detail: str = 'Application error'
 
 
-class InvalidFieldError(Exception):
-    pass
+class UserNotFoundError(AppError):
+    status_code: int = 404
+    detail: str = 'User not Found'
 
 
-class UserEmailIsExistError(Exception):
-    pass
+class InvalidFieldError(AppError):
+    status_code: int = 400
+    detail: str = 'Invalid user field'
 
 
-class UserPassNotVerifiedError(Exception):
-    pass
+class UserEmailIsExistError(AppError):
+    status_code: int = 409
+    detail: str = 'User email already exist'
 
 
-class UserIsBlockedError(Exception):
-    pass
+class UserPassNotVerifiedError(AppError):
+    status_code: int = 401
+    detail: str = 'User password not verified'
 
 
-class UserIsNotBlockedError(Exception):
-    pass
+class UserIsBlockedError(AppError):
+    status_code: int = 409
+    detail: str = 'User already blocked'
+
+
+class UserIsNotBlockedError(AppError):
+    status_code: int = 409
+    detail: str = 'User already unblocked'
