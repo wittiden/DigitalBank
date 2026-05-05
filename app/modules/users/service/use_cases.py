@@ -22,7 +22,7 @@ class CreateUserService:
     def __init__(self, user_uow: 'UserUnitOfWork') -> None:
         self._user_uow = user_uow
 
-    async def _create_entity(self, name: str, email: str, password: str, user_status: UserStatusesEnum) -> 'FullUserInfoDTO':
+    async def _create_entity(self, name: str, email: str, password: str, user_status: UserStatusesEnum) -> 'SecurityUserInfoDTO':
         password_hash = hash_pass(password)
 
         try:
@@ -36,14 +36,14 @@ class CreateUserService:
         await self._user_uow.commit()
 
         logger.info(f'Пользователь #{entity.user_id} создан')
-        return FullUserInfoDTO.model_validate(entity)
+        return SecurityUserInfoDTO.model_validate(entity)
 
     @debug_log
-    async def create_user(self, name: str, email: str, password: str) -> 'FullUserInfoDTO':
+    async def create_user(self, name: str, email: str, password: str) -> 'SecurityUserInfoDTO':
         return await self._create_entity(name, email, password, UserStatusesEnum.USER)
 
     @debug_log
-    async def create_admin(self, name: str, email: str, password: str) -> 'FullUserInfoDTO':
+    async def create_admin(self, name: str, email: str, password: str) -> 'SecurityUserInfoDTO':
         return await self._create_entity(name, email, password, UserStatusesEnum.ADMIN)
 
 
@@ -54,7 +54,7 @@ class LoginUserService:
         self._user_uow = user_uow
 
     @debug_log
-    async def login_user(self, email: str, password: str) -> 'FullUserInfoDTO':
+    async def login_user(self, email: str, password: str) -> 'SecurityUserInfoDTO':
         obj: 'UserModel' = await self._user_uow.user_queries.select_user_by_email(email)
 
         if not obj:
@@ -64,7 +64,7 @@ class LoginUserService:
             raise UserPassNotVerifiedError('Password != password_hash')
 
         logger.info(f'Вы вошли в аккаунт #{obj.user_id}')
-        return FullUserInfoDTO.model_validate(obj)
+        return SecurityUserInfoDTO.model_validate(obj)
 
 
 class DeleteUserService:
@@ -82,8 +82,8 @@ class DeleteUserService:
 
         await self._user_uow.user_commands.delete_user(obj)
 
-        logger.info(f'Пользователь #{user_id} удален')
         await self._user_uow.commit()
+        logger.info(f'Пользователь #{user_id} удален')
 
 
 class UpdateUserService:
@@ -93,7 +93,7 @@ class UpdateUserService:
         self._user_uow = user_uow
 
     @debug_log
-    async def partial_update_user(self, email: str, password: str, data: dict[str, Any]) -> 'FullUserInfoDTO':
+    async def partial_update_user(self, email: str, password: str, data: dict[str, Any]) -> 'SecurityUserInfoDTO':
         obj = await self._user_uow.user_queries.select_user_by_email(email)
 
         if not obj:
@@ -116,7 +116,7 @@ class UpdateUserService:
         await self._user_uow.commit()
 
         logger.info(f'Данные пользователя #{user.user_id} обновлены')
-        return FullUserInfoDTO.model_validate(user)
+        return SecurityUserInfoDTO.model_validate(user)
 
 
 class ShowUserService:
@@ -168,8 +168,9 @@ class ManageUserService:
 
         await self._user_uow.user_commands.partial_update_user(obj, {'is_blocked': True})
 
-        logger.info(f'Пользователь #{obj.user_id} заблокирован')
         await self._user_uow.commit()
+        logger.info(f'Пользователь #{obj.user_id} заблокирован')
+
 
     @debug_log
     async def unblock_user(self, user_id: UUID) -> None:
@@ -183,5 +184,5 @@ class ManageUserService:
 
         await self._user_uow.user_commands.partial_update_user(obj, {'is_blocked': False})
 
-        logger.info(f'Пользователь #{obj.user_id} разблокирован')
         await self._user_uow.commit()
+        logger.info(f'Пользователь #{obj.user_id} разблокирован')
