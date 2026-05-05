@@ -1,11 +1,15 @@
+from uuid import UUID
+
 from sqlalchemy.exc import IntegrityError
 from typing import TYPE_CHECKING
 
 from app.common.enums.wallet_enums import WalletTypesEnum
 from app.modules.wallets.contracts.dtos import FullWalletInfoDTO
+from app.modules.wallets.exceptions import WalletCreateError
 from app.modules.wallets.service.utils import hash_pin, verify_pin
 from app.modules.users.service.utils import verify_pass
 from app.modules.users.exceptions import UserNotFoundError, UserPassNotVerifiedError
+from app.modules.wallets.uow.uow import AccountUnitOfWork
 
 if TYPE_CHECKING:
     from app.database.models import UserModel
@@ -15,11 +19,11 @@ if TYPE_CHECKING:
 class CreateWalletService:
     """Сервис по созданию кошельков"""
 
-    def __init__(self, wallet_uow: 'WalletUnitOfWork') -> None:
-        self._wallet_uow = wallet_uow
+    def __init__(self, account_uow: 'AccountUnitOfWork') -> None:
+        self._account_uow = account_uow
 
     async def _create_wallet(self, pin: str, wallet_type: WalletTypesEnum, email: str, password: str) -> 'FullWalletInfoDTO':
-        user: 'UserModel' = await self._wallet_uow.wallet_queries.select_user_by_email(email)
+        user: 'UserModel' = await self._account_uow.user_queries.select_user_by_email(email)
 
         if not user:
             raise UserNotFoundError('User not found')
@@ -30,12 +34,12 @@ class CreateWalletService:
         pin_hash = hash_pin(pin)
 
         try:
-            wallet = await self._wallet_uow.wallet_commands.create_wallet(pin_hash, wallet_type, user)
+            wallet = await self._account_uow.wallet_commands.create_wallet(pin_hash, wallet_type, user.user_id)
         except IntegrityError:
-            await self._wallet_uow.rollback()
-            raise
+            await self._account_uow.rollback()
+            raise WalletCreateError('Error while wallet creating')
 
-        await self._wallet_uow.commit()
+        await self._account_uow.commit()
 
         return FullWalletInfoDTO.model_validate(wallet)
 

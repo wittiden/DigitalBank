@@ -6,3 +6,7 @@ class WalletRouterError(Exception):
 class InvalidFieldError(WalletRouterError):
     status_code = 400
     detail = 'Invalid wallet field'
+
+
+class WalletCreateError(WalletRouterError):
+    pass

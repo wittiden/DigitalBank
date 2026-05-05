@@ -1,4 +1,3 @@
-from tkinter import BaseWidget
 from uuid import UUID
 from pydantic import BaseModel
 

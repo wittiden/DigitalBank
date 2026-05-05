@@ -9,7 +9,7 @@ from app.modules.users.service.use_cases import CreateUserService, LoginUserServ
 from app.modules.users.uow.uow import UserUnitOfWork
 from app.modules.wallets.service.use_cases import CreateWalletService, UpdateWalletService, DeleteWalletService, \
     ManageWalletService, ShowWalletService
-from app.modules.wallets.uow.uow import WalletUnitOfWork
+from app.modules.wallets.uow.uow import WalletUnitOfWork, AccountUnitOfWork
 
 
 class AsyncEngineProvider(Provider):
@@ -64,6 +64,11 @@ class UnitOfWorkProvider(Provider):
         async with WalletUnitOfWork(async_session) as wallet_uow:
             yield wallet_uow
 
+    @provide
+    async def account_uow(self, async_session: AsyncSession) -> AsyncGenerator[AccountUnitOfWork, None]:
+        async with AccountUnitOfWork(async_session) as account_uow:
+            yield account_uow
+
 
 class UserServiceProvider(Provider):
     """Провайдер для создания сервисов пользователя"""
@@ -96,8 +101,8 @@ class WalletServiceProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def create_service(self, wallet_uow: WalletUnitOfWork) -> CreateWalletService:
-        return CreateWalletService(wallet_uow)
+    def create_service(self, account_uow: AccountUnitOfWork) -> CreateWalletService:
+        return CreateWalletService(account_uow)
 
     @provide
     def update_service(self, wallet_uow: WalletUnitOfWork) -> UpdateWalletService:
