@@ -8,4 +8,7 @@ def hash_pin(pin: str) -> str:
 
 
 def verify_pin(pin: str, pin_hash: str) -> bool:
-    return bcrypt.checkpw(pin.encode(), pin_hash.encode())
+    try:
+        return bcrypt.checkpw(pin.encode(), pin_hash.encode())
+    except Exception:
+        return False

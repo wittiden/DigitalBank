@@ -10,3 +10,23 @@ class InvalidFieldError(WalletRouterError):
 
 class WalletCreateError(WalletRouterError):
     pass
+
+
+class WalletNotFoundError(WalletRouterError):
+    pass
+
+
+class WalletIsBlockedError(WalletRouterError):
+    pass
+
+
+class WalletIsNotBlockedError(WalletRouterError):
+    pass
+
+
+class WalletPinNotVerifiedError(WalletRouterError):
+    pass
+
+
+class WalletLimitError(WalletRouterError):
+    pass
