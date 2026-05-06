@@ -4,6 +4,9 @@ from dishka import AsyncContainer, make_async_container, Provider, provide, Scop
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker, AsyncSession
 
 from app.database.config import settings
+from app.modules.balances.service.use_cases import ManageBalanceService, DeleteBalanceService, CreateBalanceService, \
+    ShowBalanceService, UpdateBalanceService, DepositBalanceService, WithdrawBalanceService, ExchangeBalanceService
+from app.modules.balances.uow.uow import BalanceUnitOfWork, OperationUnitOfWork
 from app.modules.transactions.service.use_cases import CreateTrnService, ShowTrnService
 from app.modules.transactions.uow.uow import TrnUnitOfWork
 from app.modules.users.service.use_cases import CreateUserService, LoginUserService, UpdateUserService, \
@@ -76,6 +79,16 @@ class UnitOfWorkProvider(Provider):
         async with TrnUnitOfWork(async_session) as trn_uow:
             yield trn_uow
 
+    @provide
+    async def balance_uow(self, async_session: AsyncSession) -> AsyncGenerator[BalanceUnitOfWork, None]:
+        async with BalanceUnitOfWork(async_session) as balance_uow:
+            yield balance_uow
+
+    @provide
+    async def operation_uow(self, async_session: AsyncSession) -> AsyncGenerator[OperationUnitOfWork, None]:
+        async with OperationUnitOfWork(async_session) as operation_uow:
+            yield operation_uow
+
 
 class UserServiceProvider(Provider):
     """Провайдер для создания сервисов пользователя"""
@@ -143,6 +156,44 @@ class TrnServiceProvider(Provider):
         return ShowTrnService(trn_uow)
 
 
+class BalanceServiceProvider(Provider):
+    """Провайдер для создания сервисов балансов"""
+
+    scope = Scope.REQUEST
+
+    @provide
+    def create_service(self, operation_uow: OperationUnitOfWork) -> CreateBalanceService:
+        return CreateBalanceService(operation_uow)
+
+    @provide
+    def manage_service(self, balance_uow: BalanceUnitOfWork) -> ManageBalanceService:
+        return ManageBalanceService(balance_uow)
+
+    @provide
+    def delete_service(self, balance_uow: BalanceUnitOfWork) -> DeleteBalanceService:
+        return DeleteBalanceService(balance_uow)
+
+    @provide
+    def show_service(self, balance_uow: BalanceUnitOfWork) -> ShowBalanceService:
+        return ShowBalanceService(balance_uow)
+
+    @provide
+    def update_service(self, operation_uow: OperationUnitOfWork) -> UpdateBalanceService:
+        return UpdateBalanceService(operation_uow)
+
+    @provide
+    def deposit_service(self, operation_uow: OperationUnitOfWork) -> DepositBalanceService:
+        return DepositBalanceService(operation_uow)
+
+    @provide
+    def withdraw_service(self, operation_uow: OperationUnitOfWork) -> WithdrawBalanceService:
+        return WithdrawBalanceService(operation_uow)
+
+    @provide
+    def exchange_service(self, operation_uow: OperationUnitOfWork) -> ExchangeBalanceService:
+        return ExchangeBalanceService(operation_uow)
+
+
 def build_async_container() -> AsyncContainer:
     return make_async_container(
         AsyncEngineProvider(),
@@ -152,6 +203,7 @@ def build_async_container() -> AsyncContainer:
         UserServiceProvider(),
         WalletServiceProvider(),
         TrnServiceProvider(),
+        BalanceServiceProvider(),
     )
 
 

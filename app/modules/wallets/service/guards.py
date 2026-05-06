@@ -19,12 +19,12 @@ class WalletGuards:
     @staticmethod
     def require_wallet_not_blocked(obj: 'WalletModel') -> None:
         if obj.is_blocked:
-            raise WalletIsBlockedError('User is blocked')
+            raise WalletIsBlockedError('Wallet is blocked')
 
     @staticmethod
     def require_wallet_not_unblocked(obj: 'WalletModel') -> None:
         if not obj.is_blocked:
-            raise WalletIsNotBlockedError('User is unblocked')
+            raise WalletIsNotBlockedError('Wallet is unblocked')
 
     @staticmethod
     def require_wallet_limit(wallets_count: int) -> None:

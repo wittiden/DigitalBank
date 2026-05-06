@@ -6,3 +6,28 @@ class BalanceRouterError(Exception):
 class InvalidFieldError(BalanceRouterError):
     status_code = 400
     detail = 'Invalid fild error'
+
+
+class BalanceCurrencyIsExistError(BalanceRouterError):
+    status_code = 409
+    detail = 'Balance currency is exist error'
+
+
+class BalanceNotFoundError(BalanceRouterError):
+    status_code = 404
+    detail = 'Balance not found error'
+
+
+class BalanceIsFrozenError(BalanceRouterError):
+    status_code = 409
+    detail = 'Balance already frozen error'
+
+
+class BalanceIsNotFrozenError(BalanceRouterError):
+    status_code = 409
+    detail = 'Balance already unfrozen error'
+
+
+class BalanceLimitError(BalanceRouterError):
+    status_code = 403
+    detail = 'Balance count limit error'

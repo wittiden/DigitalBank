@@ -5,8 +5,8 @@ from pydantic import BaseModel, ConfigDict
 from app.common.enums.balance_enums import BalanceTypesEnum
 
 
-class FullBalanceInfoDTO(BaseModel):
-    """DTO схема для передачи полных данных балансов"""
+class FullBalanceInfoResponse(BaseModel):
+    """Схема для ответа с полными данными баланса"""
 
     balance_id: UUID
     currency: str
@@ -18,8 +18,8 @@ class FullBalanceInfoDTO(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class SecurityBalanceInfoDTO(BaseModel):
-    """DTO схема для передачи безопасных данных балансов"""
+class SecurityBalanceInfoResponse(BaseModel):
+    """Схема для ответа с безопасными данными баланса"""
 
     currency: str
     amount: Decimal

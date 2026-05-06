@@ -36,3 +36,4 @@ class WalletPinNotVerifiedError(WalletRouterError):
 class WalletLimitError(WalletRouterError):
     status_code = 403
     detail = 'Wallet count limit'
+
