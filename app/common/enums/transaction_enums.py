@@ -4,10 +4,16 @@ from enum import Enum
 class TransactionTypesEnum(str, Enum):
     """Енум для хранения типов транзакций"""
 
-    UNKNOWN = 'Неизвестный тип транзакции'
+    UNKNOWN = 'unknown'
+    DEPOSIT = 'deposit'
+    WITHDRAW = 'withdraw'
+    EXCHANGE = 'exchange'
 
 
 class TransactionStatusesEnum(str, Enum):
     """Енум для хранения статусов транзакций"""
 
-    UNKNOWN = 'Неизвестный статус транзакции'
+    UNKNOWN = 'unknown'
+    FAILED = 'failed'
+    PENDING = 'pending'
+    SUCCESS = 'success'
