@@ -7,4 +7,3 @@ class WalletTypesEnum(str, Enum):
     UNKNOWN = 'unknown'
     DEBIT = 'debit'
     CREDIT = 'credit'
-
