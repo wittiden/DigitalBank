@@ -3,6 +3,7 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from typing import TYPE_CHECKING, Any
 
+from app.common.decorators import debug_log
 from app.common.enums.wallet_enums import WalletTypesEnum
 from app.modules.wallets.contracts.dtos import FullWalletInfoDTO
 from app.modules.wallets.contracts.dtos import SecurityWalletInfoDTO
@@ -54,9 +55,11 @@ class CreateWalletService:
         logger.info(f'Кошелек {wallet.address} создан')
         return SecurityWalletInfoDTO.model_validate(wallet)
 
+    @debug_log
     async def create_credit_wallet(self, pin: str, email: str, password: str) -> 'SecurityWalletInfoDTO':
         return await self._create_wallet(pin, WalletTypesEnum.CREDIT, email, password)
 
+    @debug_log
     async def create_debit_wallet(self, pin: str, email: str, password: str) -> 'SecurityWalletInfoDTO':
         return await self._create_wallet(pin, WalletTypesEnum.DEBIT, email, password)
 
@@ -67,6 +70,7 @@ class UpdateWalletService:
     def __init__(self, wallet_uow: 'WalletUnitOfWork') -> None:
         self._wallet_uow = wallet_uow
 
+    @debug_log
     async def partial_update_wallet(self, address: str, pin: str, data: dict[str, Any]) -> 'SecurityWalletInfoDTO':
         obj = await self._wallet_uow.wallet_queries.select_wallet_by_address(address)
 
@@ -96,6 +100,7 @@ class DeleteWalletService:
     def __init__(self, wallet_uow: 'WalletUnitOfWork') -> None:
         self._wallet_uow = wallet_uow
 
+    @debug_log
     async def delete_wallet(self, wallet_id: UUID) -> None:
         obj = await self._wallet_uow.wallet_queries.select_wallet_by_id(wallet_id)
 
@@ -107,6 +112,7 @@ class DeleteWalletService:
         await self._wallet_uow.commit()
         logger.info(f'Кошелек #{wallet_id} удален')
 
+    @debug_log
     async def close_wallet(self, address: str, pin: str) -> None:
         obj = await self._wallet_uow.wallet_queries.select_wallet_by_address(address)
 
@@ -128,6 +134,7 @@ class ManageWalletService:
     def __init__(self, wallet_uow: 'WalletUnitOfWork') -> None:
         self._wallet_uow = wallet_uow
 
+    @debug_log
     async def block_wallet(self, wallet_id: UUID) -> None:
         obj: 'WalletModel' = await self._wallet_uow.wallet_queries.select_wallet_by_id(wallet_id)
 
@@ -142,6 +149,7 @@ class ManageWalletService:
         await self._wallet_uow.commit()
         logger.info(f'Кошелек #{wallet_id} заблокирован')
 
+    @debug_log
     async def unblock_wallet(self, wallet_id: UUID) -> None:
         obj: 'WalletModel' = await self._wallet_uow.wallet_queries.select_wallet_by_id(wallet_id)
 
@@ -160,34 +168,40 @@ class ManageWalletService:
 class ShowWalletService:
     """Сервис по показу кошельков"""
 
-    def __init__(self, wallet_uow: 'WalletUnitOfWork') -> None:
-        self._wallet_uow = wallet_uow
+    def __init__(self, account_uow: 'AccountUnitOfWork') -> None:
+        self._account_uow = account_uow
 
+    @debug_log
     async def show_wallet_by_id(self, wallet_id: UUID) -> 'FullWalletInfoDTO':
-        obj = await self._wallet_uow.wallet_queries.select_wallet_by_id(wallet_id)
+        obj = await self._account_uow.wallet_queries.select_wallet_by_id(wallet_id)
 
         if not obj:
             raise WalletNotFoundError('Wallet not found')
 
         return FullWalletInfoDTO.model_validate(obj)
 
+    @debug_log
     async def show_wallets_by_user_id(self, user_id: UUID) -> list['SecurityWalletInfoDTO']:
-        objs = await self._wallet_uow.wallet_queries.select_wallets_by_user_id(user_id)
+        objs = await self._account_uow.wallet_queries.select_wallets_by_user_id(user_id)
 
         return [SecurityWalletInfoDTO.model_validate(obj) for obj in objs]
 
+    @debug_log
     async def show_wallets(self, offset: int = 0, limit: int = 0) -> list['FullWalletInfoDTO']:
-        objs = await self._wallet_uow.wallet_queries.select_wallets(offset, limit)
+        objs = await self._account_uow.wallet_queries.select_wallets(offset, limit)
 
         return [FullWalletInfoDTO.model_validate(obj) for obj in objs]
 
-    async def show_wallet_by_address(self, address: str, pin: str) -> 'SecurityWalletInfoDTO':
-        obj = await self._wallet_uow.wallet_queries.select_wallet_by_address(address)
+    @debug_log
+    async def show_my_wallets(self, email: str, password: str) -> list['SecurityWalletInfoDTO']:
+        user = await self._account_uow.user_queries.select_user_by_email(email)
 
-        if not obj:
-            raise WalletNotFoundError('Wallet not found')
+        if not user:
+            raise UserNotFoundError('User not found')
 
-        if not verify_pin(pin, obj.pin_hash):
-            raise WalletPinNotVerifiedError('Wallet pin not verified')
+        if not verify_pass(password, user.password_hash):
+            raise UserPassNotVerifiedError('Password != password_hash')
 
-        return SecurityWalletInfoDTO.model_validate(obj)
+        objs = await self._account_uow.wallet_queries.select_wallets_by_user_id(user.user_id)
+
+        return [SecurityWalletInfoDTO.model_validate(obj) for obj in objs]

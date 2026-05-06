@@ -16,3 +16,10 @@ class UpdateUserSchema(BaseModel):
     email: EmailStr
     password: str
     data: dict[str, Any]
+
+
+class ShowMyUserSchema(BaseModel):
+    """Схема показа моего пользователя"""
+
+    email: EmailStr
+    password: str

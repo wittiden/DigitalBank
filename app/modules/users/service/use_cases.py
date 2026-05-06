@@ -141,11 +141,14 @@ class ShowUserService:
         return FullUserInfoDTO.model_validate(obj)
 
     @debug_log
-    async def show_user_by_email(self, email: str) -> 'SecurityUserInfoDTO':
+    async def show_my_user(self, email: str, password: str) -> 'SecurityUserInfoDTO':
         obj = await self._user_uow.user_queries.select_user_by_email(email)
 
         if not obj:
             raise UserNotFoundError('User not found')
+
+        if not verify_pass(password, obj.password_hash):
+            raise UserPassNotVerifiedError('Password != password_hash')
 
         return SecurityUserInfoDTO.model_validate(obj)
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 from decimal import Decimal
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.common.enums.transaction_enums import TransactionTypesEnum, TransactionStatusesEnum
 
@@ -22,17 +22,4 @@ class FullTrnInfoDTO(BaseModel):
     transaction_type: TransactionTypesEnum
     transaction_status: TransactionStatusesEnum
 
-
-class SecurityTrnInfoDTO(BaseModel):
-    """DTO схема для передачи безопасных данных о транзакции"""
-
-    from_wallet_id: UUID
-    to_wallet_id: UUID
-    amount: Decimal
-    fee: Decimal
-    rate: Decimal | None
-    completed_at: datetime | None
-    from_currency: str
-    to_currency: str | None
-    transaction_type: TransactionTypesEnum
-    transaction_status: TransactionStatusesEnum
+    model_config = ConfigDict(from_attributes=True)

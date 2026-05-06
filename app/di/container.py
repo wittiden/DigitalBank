@@ -4,6 +4,8 @@ from dishka import AsyncContainer, make_async_container, Provider, provide, Scop
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker, AsyncSession
 
 from app.database.config import settings
+from app.modules.transactions.service.use_cases import CreateTrnService, ShowTrnService
+from app.modules.transactions.uow.uow import TrnUnitOfWork
 from app.modules.users.service.use_cases import CreateUserService, LoginUserService, UpdateUserService, \
     DeleteUserService, ShowUserService
 from app.modules.users.uow.uow import UserUnitOfWork
@@ -69,6 +71,11 @@ class UnitOfWorkProvider(Provider):
         async with AccountUnitOfWork(async_session) as account_uow:
             yield account_uow
 
+    @provide
+    async def trn_uow(self, async_session: AsyncSession) -> AsyncGenerator[TrnUnitOfWork, None]:
+        async with TrnUnitOfWork(async_session) as trn_uow:
+            yield trn_uow
+
 
 class UserServiceProvider(Provider):
     """Провайдер для создания сервисов пользователя"""
@@ -97,6 +104,7 @@ class UserServiceProvider(Provider):
 
 
 class WalletServiceProvider(Provider):
+    """Провайдер для создания сервисов кошельков"""
 
     scope = Scope.REQUEST
 
@@ -117,8 +125,22 @@ class WalletServiceProvider(Provider):
         return ManageWalletService(wallet_uow)
 
     @provide
-    def show_service(self, wallet_uow: WalletUnitOfWork) -> ShowWalletService:
-        return ShowWalletService(wallet_uow)
+    def show_service(self, account_uow: AccountUnitOfWork) -> ShowWalletService:
+        return ShowWalletService(account_uow)
+
+
+class TrnServiceProvider(Provider):
+    """Провайдер для создания сервисов транзакций"""
+
+    scope = Scope.REQUEST
+
+    @provide
+    def create_service(self, trn_uow: TrnUnitOfWork) -> CreateTrnService:
+        return CreateTrnService(trn_uow)
+
+    @provide
+    def show_service(self, trn_uow: TrnUnitOfWork) -> ShowTrnService:
+        return ShowTrnService(trn_uow)
 
 
 def build_async_container() -> AsyncContainer:
@@ -129,6 +151,7 @@ def build_async_container() -> AsyncContainer:
         UnitOfWorkProvider(),
         UserServiceProvider(),
         WalletServiceProvider(),
+        TrnServiceProvider(),
     )
 
 

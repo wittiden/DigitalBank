@@ -1,5 +1,4 @@
 from typing import Any
-
 from pydantic import BaseModel, EmailStr
 
 
@@ -26,8 +25,9 @@ class CloseWalletSchema(BaseModel):
     pin: str
 
 
-class ShowWalletByAddressSchema(BaseModel):
-    """Схема для поиска кошелька по адресу"""
+class ShowMyWalletsSchema(BaseModel):
+    """Схема для поиска собственных кошельков"""
 
-    address: str
-    pin: str
+    email: EmailStr
+    password: str
+
