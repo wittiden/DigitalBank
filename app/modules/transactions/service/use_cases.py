@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 from sqlalchemy.exc import IntegrityError
+from loguru import logger
 
 from app.common.enums.transaction_enums import TransactionTypesEnum
 from app.modules.transactions.contracts.dtos import FullTrnInfoDTO, SecurityTrnInfoDTO
@@ -21,6 +22,7 @@ class CreateTrnService:
         except IntegrityError:
             raise TrnCreateError('Error while transaction created')
 
+        logger.info('Create transaction')
         return SecurityTrnInfoDTO.model_validate(obj)
 
     async def create_deposit_trn(self, from_wallet_id: UUID, amount: Decimal, fee: Decimal, from_currency: str, to_wallet_id: UUID) -> 'SecurityTrnInfoDTO':
