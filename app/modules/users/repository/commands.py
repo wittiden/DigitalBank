@@ -21,7 +21,8 @@ class UserCommandsRepository:
     async def partial_update_user(self, user: 'UserModel', data: dict[str, Any]) -> 'UserModel':
         for key, value in data.items():
             if not hasattr(user, key):
-                raise InvalidFieldError(f'Invalid field {key}')
+                raise InvalidFieldError(f'Invalid field {key} error')
+
             setattr(user, key, value)
 
         await self._async_session.flush()

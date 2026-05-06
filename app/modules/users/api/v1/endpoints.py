@@ -3,7 +3,7 @@ from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter
 
 from app.modules.users.contracts.responses import FullUserInfoResponse, SecurityUserInfoResponse
-from app.modules.users.contracts.schemas import CreateUserSchema, UpdateUserSchema
+from app.modules.users.contracts.schemas import CreateUserSchema, UpdateUserSchema, CloseUserSchema
 from app.modules.users.contracts.schemas import ShowMyUserSchema
 from app.modules.users.service.use_cases import CreateUserService, ShowUserService, UpdateUserService, \
     DeleteUserService, ManageUserService
@@ -39,6 +39,12 @@ async def delete_user_by_id_endpoint(user_id: UUID, service: FromDishka[DeleteUs
     await service.delete_user_by_id(user_id)
 
 
+@user_router.delete('/', summary='Close user')
+@inject
+async def close_user_endpoint(schema: CloseUserSchema, service: FromDishka[DeleteUserService]) -> None:
+    await service.close_user(schema.email, schema.password)
+
+
 @admin_router.patch('/block/{user_id}', summary='Block user')
 @inject
 async def block_user_endpoint(user_id: UUID, service: FromDishka[ManageUserService]) -> None:
@@ -58,11 +64,11 @@ async def get_user_by_id_endpoint(user_id: UUID, service: FromDishka[ShowUserSer
     return obj
 
 
-@user_router.get('/me', response_model=SecurityUserInfoResponse, summary='Get my user')
-@inject
-async def get_my_user_endpoint(schema: 'ShowMyUserSchema', service: FromDishka[ShowUserService]) -> SecurityUserInfoResponse:
-    obj = await service.show_my_user(schema.email, schema.password)
-    return obj
+# @user_router.get('/me', response_model=SecurityUserInfoResponse, summary='Get my user')
+# @inject
+# async def get_my_user_endpoint(schema: 'ShowMyUserSchema', service: FromDishka[ShowUserService]) -> SecurityUserInfoResponse:
+#     obj = await service.show_my_user(schema.email, schema.password)
+#     return obj
 
 
 @admin_router.get('/', response_model=list[FullUserInfoResponse], summary='Get users')

@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 from pydantic import BaseModel, EmailStr
 
 
@@ -16,6 +17,15 @@ class UpdateWalletSchema(BaseModel):
     address: str
     pin: str
     data: dict[str, Any]
+
+
+class UpdateWalletUserSchema(BaseModel):
+    """Схема для обновления владельца кошелька"""
+
+    address: str
+    pin: str
+    email: EmailStr
+    password: str
 
 
 class CloseWalletSchema(BaseModel):

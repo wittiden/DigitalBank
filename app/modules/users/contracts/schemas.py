@@ -23,3 +23,10 @@ class ShowMyUserSchema(BaseModel):
 
     email: EmailStr
     password: str
+
+
+class CloseUserSchema(BaseModel):
+    """Схема закрытия аккаунта пользователя"""
+
+    email: EmailStr
+    password: str

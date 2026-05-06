@@ -4,7 +4,7 @@ from dishka.integrations.fastapi import FromDishka, inject
 
 from app.modules.wallets.contracts.responses import FullWalletInfoResponse, SecurityWalletInfoResponse
 from app.modules.wallets.contracts.schemas import CreateWalletSchema, CloseWalletSchema, \
-    UpdateWalletSchema, ShowMyWalletsSchema
+    UpdateWalletSchema, ShowMyWalletsSchema, UpdateWalletUserSchema
 from app.modules.wallets.service.use_cases import CreateWalletService, DeleteWalletService, ManageWalletService, \
     ShowWalletService, UpdateWalletService
 
@@ -28,6 +28,12 @@ async def create_debit_wallet_endpoint(schema: CreateWalletSchema, service: From
 @inject
 async def update_wallet_endpoint(schema: UpdateWalletSchema, service: FromDishka[UpdateWalletService]) -> SecurityWalletInfoResponse:
     return await service.partial_update_wallet(schema.address, schema.pin, schema.data)
+
+
+@admin_wallet_router.patch('/', response_model=FullWalletInfoResponse, summary='Update wallet user')
+@inject
+async def update_wallet_user_endpoint(schema: UpdateWalletUserSchema, service: FromDishka[UpdateWalletService]) -> FullWalletInfoResponse:
+    return await service.partial_update_wallet(schema.address, schema.pin, schema.email, schema.password)
 
 
 @admin_wallet_router.delete('/{wallet_id}', summary='Delete wallet')

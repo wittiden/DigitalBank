@@ -31,3 +31,8 @@ class UserIsBlockedError(UserRouterError):
 class UserIsNotBlockedError(UserRouterError):
     status_code: int = 409
     detail: str = 'User already unblocked'
+
+
+class UserPassesIsTheSame(UserRouterError):
+    status_code = 400
+    detail = 'User old_pass == new_pass'

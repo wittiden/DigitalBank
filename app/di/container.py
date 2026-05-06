@@ -113,8 +113,8 @@ class WalletServiceProvider(Provider):
         return CreateWalletService(account_uow)
 
     @provide
-    def update_service(self, wallet_uow: WalletUnitOfWork) -> UpdateWalletService:
-        return UpdateWalletService(wallet_uow)
+    def update_service(self, account_uow: AccountUnitOfWork) -> UpdateWalletService:
+        return UpdateWalletService(account_uow)
 
     @provide
     def delete_service(self, wallet_uow: WalletUnitOfWork) -> DeleteWalletService:

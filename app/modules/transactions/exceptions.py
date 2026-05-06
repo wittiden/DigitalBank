@@ -1,19 +1,23 @@
 class TrnRouterError(Exception):
     status_code: int = 400
-    detail: str = ''
+    detail: str = 'Transaction router error'
 
 
 class InvalidFieldError(TrnRouterError):
-    pass
+    status_code: int = 400
+    detail: str = 'Invalid field error'
 
 
 class TrnNotFoundError(TrnRouterError):
-    pass
+    status_code: int = 404
+    detail: str = 'Transaction not found error'
 
 
 class TrnCreateError(TrnRouterError):
-    pass
+    status_code: int = 400
+    detail: str = 'Transaction create error'
 
 
 class TrnCurrenciesIsTheSameError(TrnRouterError):
-    pass
+    status_code: int = 409
+    detail: str = 'Transaction from_currency == to_currency error'

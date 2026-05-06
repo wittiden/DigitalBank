@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING, Any
 
 from app.common.decorators import debug_log
 from app.common.enums.wallet_enums import WalletTypesEnum
+from app.modules.users.service.guards import UserGuards
 from app.modules.wallets.contracts.dtos import FullWalletInfoDTO
 from app.modules.wallets.contracts.dtos import SecurityWalletInfoDTO
-from app.modules.wallets.exceptions import WalletCreateError, WalletNotFoundError, WalletIsBlockedError, \
-    WalletIsNotBlockedError, WalletPinNotVerifiedError, InvalidFieldError, WalletLimitError
-from app.modules.wallets.service.utils import hash_pin, verify_pin
-from app.modules.users.service.utils import verify_pass
-from app.modules.users.exceptions import UserNotFoundError, UserPassNotVerifiedError, UserIsBlockedError
+from app.modules.wallets.exceptions import WalletCreateError, InvalidFieldError
+from app.modules.wallets.service.guards import WalletGuards
+from app.modules.wallets.service.utils import hash_pin
 
 if TYPE_CHECKING:
     from app.database.models import WalletModel
@@ -29,18 +28,12 @@ class CreateWalletService:
     async def _create_wallet(self, pin: str, wallet_type: WalletTypesEnum, email: str, password: str) -> 'SecurityWalletInfoDTO':
         user: 'UserModel' = await self._account_uow.user_queries.select_user_by_email(email)
 
-        if not user:
-            raise UserNotFoundError('User not found')
-
-        if user.is_blocked:
-            raise UserIsBlockedError('User is blocked')
+        UserGuards.require_user_exists(user)
+        UserGuards.require_user_not_blocked(user)
+        UserGuards.require_verify_pass(password, user.password_hash)
 
         wallets_count = await self._account_uow.wallet_queries.select_wallets_count_by_user_id(user.user_id)
-        if wallets_count >= 6:
-            raise WalletLimitError('Wallet limit error (max limit = 5)')
-
-        if not verify_pass(password, user.password_hash):
-            raise UserPassNotVerifiedError('User password != password_hash')
+        WalletGuards.require_wallet_limit(wallets_count)
 
         pin_hash = hash_pin(pin)
 
@@ -67,20 +60,22 @@ class CreateWalletService:
 class UpdateWalletService:
     """Сервис по обновлению информации кошельков"""
 
-    def __init__(self, wallet_uow: 'WalletUnitOfWork') -> None:
-        self._wallet_uow = wallet_uow
+    def __init__(self, account_uow: 'AccountUnitOfWork') -> None:
+        self._account_uow = account_uow
 
     @debug_log
     async def partial_update_wallet(self, address: str, pin: str, data: dict[str, Any]) -> 'SecurityWalletInfoDTO':
-        obj = await self._wallet_uow.wallet_queries.select_wallet_by_address(address)
+        obj = await self._account_uow.wallet_queries.select_wallet_by_address(address)
 
-        if not obj:
-            raise WalletNotFoundError('Wallet not found')
+        WalletGuards.require_wallet_exists(obj)
+        WalletGuards.require_verify_pin(pin, obj.pin_hash)
 
-        if not verify_pin(pin, obj.pin_hash):
-            raise WalletPinNotVerifiedError('Wallet pin not verified')
+        if 'pin' in data.keys():
+            pin_hash = hash_pin(data['pin'])
+            data.pop('pin')
+            data['pin_hash'] = pin_hash
 
-        whitelist = ['pin_hash', 'user_id']
+        whitelist = ['pin_hash']
 
         for key, value in data.items():
             if key not in whitelist:
@@ -88,10 +83,32 @@ class UpdateWalletService:
 
             setattr(obj, key, value)
 
-        await self._wallet_uow.commit()
+        await self._account_uow.commit()
 
         logger.info(f'Информация кошелька {address} обновлена')
         return SecurityWalletInfoDTO.model_validate(obj)
+
+    async def update_wallet_user(self, address: str, pin: str, email: str, password: str) -> 'FullWalletInfoDTO':
+        obj = await self._account_uow.wallet_queries.select_wallet_by_address(address)
+
+        WalletGuards.require_wallet_exists(obj)
+        WalletGuards.require_verify_pin(pin, obj.pin_hash)
+
+        user: 'UserModel' = await self._account_uow.user_queries.select_user_by_email(email)
+
+        UserGuards.require_user_exists(user)
+        UserGuards.require_user_not_blocked(user)
+        UserGuards.require_verify_pass(password, user.password_hash)
+
+        setattr(obj, 'user_id', user.user_id)
+
+        wallets_count = await self._account_uow.wallet_queries.select_wallets_count_by_user_id(user.user_id)
+        WalletGuards.require_wallet_limit(wallets_count)
+
+        await self._account_uow.commit()
+
+        logger.info(f'Владелец кошелька {address} обновлен')
+        return FullWalletInfoDTO.model_validate(obj)
 
 
 class DeleteWalletService:
@@ -104,8 +121,7 @@ class DeleteWalletService:
     async def delete_wallet(self, wallet_id: UUID) -> None:
         obj = await self._wallet_uow.wallet_queries.select_wallet_by_id(wallet_id)
 
-        if not obj:
-            raise WalletNotFoundError('Wallet not found')
+        WalletGuards.require_wallet_exists(obj)
 
         await self._wallet_uow.wallet_commands.delete_wallet(obj)
 
@@ -116,11 +132,8 @@ class DeleteWalletService:
     async def close_wallet(self, address: str, pin: str) -> None:
         obj = await self._wallet_uow.wallet_queries.select_wallet_by_address(address)
 
-        if not obj:
-            raise WalletNotFoundError('Wallet not found')
-
-        if not verify_pin(pin, obj.pin_hash):
-            raise WalletPinNotVerifiedError('Wallet pin not verified')
+        WalletGuards.require_wallet_exists(obj)
+        WalletGuards.require_verify_pin(pin, obj.pin_hash)
 
         await self._wallet_uow.wallet_commands.delete_wallet(obj)
 
@@ -138,11 +151,8 @@ class ManageWalletService:
     async def block_wallet(self, wallet_id: UUID) -> None:
         obj: 'WalletModel' = await self._wallet_uow.wallet_queries.select_wallet_by_id(wallet_id)
 
-        if not obj:
-            raise WalletNotFoundError('Wallet not found')
-
-        if obj.is_blocked:
-            raise WalletIsBlockedError('Wallet already blocked')
+        WalletGuards.require_wallet_exists(obj)
+        WalletGuards.require_wallet_not_blocked(obj)
 
         await self._wallet_uow.wallet_commands.partial_update_wallet(obj, {'is_blocked': True})
 
@@ -153,11 +163,8 @@ class ManageWalletService:
     async def unblock_wallet(self, wallet_id: UUID) -> None:
         obj: 'WalletModel' = await self._wallet_uow.wallet_queries.select_wallet_by_id(wallet_id)
 
-        if not obj:
-            raise WalletNotFoundError('Wallet not found')
-
-        if not obj.is_blocked:
-            raise WalletIsNotBlockedError('Wallet already unblocked')
+        WalletGuards.require_wallet_exists(obj)
+        WalletGuards.require_wallet_not_unblocked(obj)
 
         await self._wallet_uow.wallet_commands.partial_update_wallet(obj, {'is_blocked': False})
 
@@ -175,8 +182,7 @@ class ShowWalletService:
     async def show_wallet_by_id(self, wallet_id: UUID) -> 'FullWalletInfoDTO':
         obj = await self._account_uow.wallet_queries.select_wallet_by_id(wallet_id)
 
-        if not obj:
-            raise WalletNotFoundError('Wallet not found')
+        WalletGuards.require_wallet_exists(obj)
 
         return FullWalletInfoDTO.model_validate(obj)
 
@@ -196,11 +202,8 @@ class ShowWalletService:
     async def show_my_wallets(self, email: str, password: str) -> list['SecurityWalletInfoDTO']:
         user = await self._account_uow.user_queries.select_user_by_email(email)
 
-        if not user:
-            raise UserNotFoundError('User not found')
-
-        if not verify_pass(password, user.password_hash):
-            raise UserPassNotVerifiedError('Password != password_hash')
+        UserGuards.require_user_exists(user)
+        UserGuards.require_verify_pass(password, user.password_hash)
 
         objs = await self._account_uow.wallet_queries.select_wallets_by_user_id(user.user_id)
 
