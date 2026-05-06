@@ -3,7 +3,6 @@ from decimal import Decimal
 from uuid import UUID
 from sqlalchemy.exc import IntegrityError
 
-from app.common.enums.transaction_enums import TransactionStatusesEnum
 from app.common.enums.transaction_enums import TransactionTypesEnum
 from app.modules.transactions.contracts.dtos import FullTrnInfoDTO, SecurityTrnInfoDTO
 from app.modules.transactions.exceptions import TrnNotFoundError, TrnCreateError, TrnCurrenciesIsTheSameError
