@@ -3,15 +3,25 @@ from typing import Any, AsyncGenerator
 from dishka import AsyncContainer, make_async_container, Provider, provide, Scope
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker, AsyncSession
 
+from app.common.uow import UnitOfWork
 from app.database.config import settings
-from app.modules.transactions.service.use_cases import CreateTrnService, ShowTrnService
-from app.modules.transactions.uow.uow import TrnUnitOfWork
+from app.modules.balances.repository.commands import BalanceCommandsRepository
+from app.modules.balances.repository.queries import BalanceQueriesRepository
+from app.modules.balances.service.operation_use_cases import DepositBalanceService, TransferBalanceService, \
+    WithdrawBalanceService, ExchangeBalanceService
+from app.modules.balances.service.use_cases import CreateBalanceService, ManageBalanceService, DeleteBalanceService, \
+    ShowBalanceService, UpdateBalanceService
+from app.modules.transactions.repository.commands import TrnCommandsRepository
+from app.modules.transactions.repository.queries import TrnQueriesRepository
+from app.modules.transactions.service.use_cases import CreateTrnService, ShowTrnService, UpdateTrnService
+from app.modules.users.repository.commands import UserCommandsRepository
+from app.modules.users.repository.queries import UserQueriesRepository
 from app.modules.users.service.use_cases import CreateUserService, LoginUserService, UpdateUserService, \
-    DeleteUserService, ShowUserService
-from app.modules.users.uow.uow import UserUnitOfWork
+    DeleteUserService, ShowUserService, ManageUserService
+from app.modules.wallets.repository.commands import WalletCommandsRepository
+from app.modules.wallets.repository.queries import WalletQueriesRepository
 from app.modules.wallets.service.use_cases import CreateWalletService, UpdateWalletService, DeleteWalletService, \
     ManageWalletService, ShowWalletService
-from app.modules.wallets.uow.uow import WalletUnitOfWork, AccountUnitOfWork
 
 
 class AsyncEngineProvider(Provider):
@@ -57,24 +67,53 @@ class UnitOfWorkProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    async def user_uow(self, async_session: AsyncSession) -> AsyncGenerator[UserUnitOfWork, None]:
-        async with UserUnitOfWork(async_session) as user_uow:
-            yield user_uow
+    async def uow(self, async_session: AsyncSession) -> AsyncGenerator[UnitOfWork, None]:
+        async with UnitOfWork(async_session) as uow:
+            yield uow
+
+
+class CommandsRepositoryProvider(Provider):
+    """Провайдер для создания репозиториев команд"""
+
+    scope = Scope.REQUEST
 
     @provide
-    async def wallet_uow(self, async_session: AsyncSession) -> AsyncGenerator[WalletUnitOfWork, None]:
-        async with WalletUnitOfWork(async_session) as wallet_uow:
-            yield wallet_uow
+    def user_commands(self, async_session: AsyncSession) -> UserCommandsRepository:
+        return UserCommandsRepository(async_session)
 
     @provide
-    async def account_uow(self, async_session: AsyncSession) -> AsyncGenerator[AccountUnitOfWork, None]:
-        async with AccountUnitOfWork(async_session) as account_uow:
-            yield account_uow
+    def wallet_commands(self, async_session: AsyncSession) -> WalletCommandsRepository:
+        return WalletCommandsRepository(async_session)
 
     @provide
-    async def trn_uow(self, async_session: AsyncSession) -> AsyncGenerator[TrnUnitOfWork, None]:
-        async with TrnUnitOfWork(async_session) as trn_uow:
-            yield trn_uow
+    def balance_commands(self, async_session: AsyncSession) -> BalanceCommandsRepository:
+        return BalanceCommandsRepository(async_session)
+
+    @provide
+    def trn_commands(self, async_session: AsyncSession) -> TrnCommandsRepository:
+        return TrnCommandsRepository(async_session)
+
+
+class QueriesRepositoryProvider(Provider):
+    """Провайдер для создания репозиториев запросов"""
+
+    scope = Scope.REQUEST
+
+    @provide
+    def user_queries(self, async_session: AsyncSession) -> UserQueriesRepository:
+        return UserQueriesRepository(async_session)
+
+    @provide
+    def wallet_queries(self, async_session: AsyncSession) -> WalletQueriesRepository:
+        return WalletQueriesRepository(async_session)
+
+    @provide
+    def balance_queries(self, async_session: AsyncSession) -> BalanceQueriesRepository:
+        return BalanceQueriesRepository(async_session)
+
+    @provide
+    def trn_queries(self, async_session: AsyncSession) -> TrnQueriesRepository:
+        return TrnQueriesRepository(async_session)
 
 
 class UserServiceProvider(Provider):
@@ -83,24 +122,28 @@ class UserServiceProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def create_service(self, user_uow: UserUnitOfWork) -> CreateUserService:
-        return CreateUserService(user_uow)
+    def create_service(self, user_commands: UserCommandsRepository) -> CreateUserService:
+        return CreateUserService(user_commands)
 
     @provide
-    def login_service(self, user_uow: UserUnitOfWork) -> LoginUserService:
-        return LoginUserService(user_uow)
+    def login_service(self, user_queries: UserQueriesRepository) -> LoginUserService:
+        return LoginUserService(user_queries)
 
     @provide
-    def update_service(self, user_uow: UserUnitOfWork) -> UpdateUserService:
-        return UpdateUserService(user_uow)
+    def update_service(self, user_commands: UserCommandsRepository, user_queries: UserQueriesRepository) -> UpdateUserService:
+        return UpdateUserService(user_commands, user_queries)
 
     @provide
-    def delete_service(self, user_uow: UserUnitOfWork) -> DeleteUserService:
-        return DeleteUserService(user_uow)
+    def delete_service(self, user_commands: UserCommandsRepository, user_queries: UserQueriesRepository) -> DeleteUserService:
+        return DeleteUserService(user_commands, user_queries)
 
     @provide
-    def show_service(self, user_uow: UserUnitOfWork) -> ShowUserService:
-        return ShowUserService(user_uow)
+    def show_service(self, user_queries: UserQueriesRepository) -> ShowUserService:
+        return ShowUserService(user_queries)
+
+    @provide
+    def manage_service(self, user_commands: UserCommandsRepository, user_queries: UserQueriesRepository) -> ManageUserService:
+        return ManageUserService(user_commands, user_queries)
 
 
 class WalletServiceProvider(Provider):
@@ -109,24 +152,24 @@ class WalletServiceProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def create_service(self, account_uow: AccountUnitOfWork) -> CreateWalletService:
-        return CreateWalletService(account_uow)
+    def create_service(self, wallet_commands: WalletCommandsRepository, wallet_queries: WalletQueriesRepository, user_queries: UserQueriesRepository) -> CreateWalletService:
+        return CreateWalletService(wallet_commands, wallet_queries, user_queries)
 
     @provide
-    def update_service(self, account_uow: AccountUnitOfWork) -> UpdateWalletService:
-        return UpdateWalletService(account_uow)
+    def update_service(self, wallet_commands: WalletCommandsRepository, wallet_queries: WalletQueriesRepository, user_queries: UserQueriesRepository) -> UpdateWalletService:
+        return UpdateWalletService(wallet_commands, wallet_queries, user_queries)
 
     @provide
-    def delete_service(self, wallet_uow: WalletUnitOfWork) -> DeleteWalletService:
-        return DeleteWalletService(wallet_uow)
+    def delete_service(self, wallet_commands: WalletCommandsRepository, wallet_queries: WalletQueriesRepository) -> DeleteWalletService:
+        return DeleteWalletService(wallet_commands, wallet_queries)
 
     @provide
-    def manage_service(self, wallet_uow: WalletUnitOfWork) -> ManageWalletService:
-        return ManageWalletService(wallet_uow)
+    def manage_service(self, wallet_commands: WalletCommandsRepository, wallet_queries: WalletQueriesRepository) -> ManageWalletService:
+        return ManageWalletService(wallet_commands, wallet_queries)
 
     @provide
-    def show_service(self, account_uow: AccountUnitOfWork) -> ShowWalletService:
-        return ShowWalletService(account_uow)
+    def show_service(self, wallet_queries: WalletQueriesRepository, user_queries: UserQueriesRepository) -> ShowWalletService:
+        return ShowWalletService(wallet_queries, user_queries)
 
 
 class TrnServiceProvider(Provider):
@@ -135,12 +178,64 @@ class TrnServiceProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def create_service(self, trn_uow: TrnUnitOfWork) -> CreateTrnService:
-        return CreateTrnService(trn_uow)
+    def create_service(self, trn_commands: TrnCommandsRepository) -> CreateTrnService:
+        return CreateTrnService(trn_commands)
 
     @provide
-    def show_service(self, trn_uow: TrnUnitOfWork) -> ShowTrnService:
-        return ShowTrnService(trn_uow)
+    def update_service(self, trn_commands: TrnCommandsRepository, trn_queries: TrnQueriesRepository) -> UpdateTrnService:
+        return UpdateTrnService(trn_commands, trn_queries)
+
+    @provide
+    def show_service(self, trn_queries: TrnQueriesRepository) -> ShowTrnService:
+        return ShowTrnService(trn_queries)
+
+
+class BalanceServiceProvider(Provider):
+    """Провайдер для создания сервисов балансов"""
+
+    scope = Scope.REQUEST
+
+    @provide
+    def create_service(self, wallet_queries: WalletQueriesRepository, balance_commands: BalanceCommandsRepository, balance_queries: BalanceQueriesRepository) -> CreateBalanceService:
+        return CreateBalanceService(wallet_queries, balance_commands, balance_queries)
+
+    @provide
+    def manage_service(self, balance_commands: BalanceCommandsRepository, balance_queries: BalanceQueriesRepository) -> ManageBalanceService:
+        return ManageBalanceService(balance_commands, balance_queries)
+
+    @provide
+    def update_service(self, balance_commands: BalanceCommandsRepository, balance_queries: BalanceQueriesRepository) -> UpdateBalanceService:
+        return UpdateBalanceService(balance_commands, balance_queries)
+
+    @provide
+    def delete_service(self, balance_commands: BalanceCommandsRepository, balance_queries: BalanceQueriesRepository) -> DeleteBalanceService:
+        return DeleteBalanceService(balance_commands, balance_queries)
+
+    @provide
+    def show_service(self, wallet_queries: WalletQueriesRepository, balance_queries: BalanceQueriesRepository) -> ShowBalanceService:
+        return ShowBalanceService(wallet_queries, balance_queries)
+
+
+class OperationServiceProvider(Provider):
+    """Провайдер для создания сервисов операций"""
+
+    scope = Scope.REQUEST
+
+    @provide
+    def deposit_service(self, wallet_queries: WalletQueriesRepository, balance_commands: BalanceCommandsRepository, balance_queries: BalanceQueriesRepository, create_service: CreateTrnService, update_service: UpdateTrnService) -> DepositBalanceService:
+        return DepositBalanceService(wallet_queries, balance_commands, balance_queries, create_service, update_service)
+
+    @provide
+    def transfer_service(self, wallet_queries: WalletQueriesRepository, balance_commands: BalanceCommandsRepository, balance_queries: BalanceQueriesRepository, create_service: CreateTrnService, update_service: UpdateTrnService) -> TransferBalanceService:
+        return TransferBalanceService(wallet_queries, balance_commands, balance_queries, create_service, update_service)
+
+    @provide
+    def withdraw_service(self, wallet_queries: WalletQueriesRepository, balance_commands: BalanceCommandsRepository, balance_queries: BalanceQueriesRepository, create_service: CreateTrnService, update_service: UpdateTrnService) -> WithdrawBalanceService:
+        return WithdrawBalanceService(wallet_queries, balance_commands, balance_queries, create_service, update_service)
+
+    @provide
+    def exchange_service(self, wallet_queries: WalletQueriesRepository, balance_commands: BalanceCommandsRepository, balance_queries: BalanceQueriesRepository, create_service: CreateTrnService, update_service: UpdateTrnService) -> ExchangeBalanceService:
+        return ExchangeBalanceService(wallet_queries, balance_commands, balance_queries, create_service, update_service)
 
 
 def build_async_container() -> AsyncContainer:
@@ -149,9 +244,13 @@ def build_async_container() -> AsyncContainer:
         AsyncSessionMakerProvider(),
         AsyncSessionProvider(),
         UnitOfWorkProvider(),
+        CommandsRepositoryProvider(),
+        QueriesRepositoryProvider(),
         UserServiceProvider(),
         WalletServiceProvider(),
         TrnServiceProvider(),
+        BalanceServiceProvider(),
+        OperationServiceProvider(),
     )
 
 

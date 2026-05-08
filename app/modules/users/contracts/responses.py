@@ -10,7 +10,6 @@ class FullUserInfoResponse(BaseModel):
     user_id: UUID
     name: str
     email: EmailStr
-    password_hash: str
     is_blocked: bool
     user_status: UserStatusesEnum
 

@@ -10,8 +10,8 @@ class FullTrnInfoDTO(BaseModel):
     """DTO схема для передачи полных данных о транзакции"""
 
     transaction_id: UUID
-    from_wallet_id: UUID
-    to_wallet_id: UUID
+    from_address: str
+    to_address: str
     amount: Decimal
     fee: Decimal
     rate: Decimal | None
@@ -21,5 +21,51 @@ class FullTrnInfoDTO(BaseModel):
     to_currency: str | None
     transaction_type: TransactionTypesEnum
     transaction_status: TransactionStatusesEnum
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DepositDraftDTO(BaseModel):
+    """DTO схема для передачи черновика с данными о транзакции пополнения"""
+
+    from_address: str
+    amount: Decimal
+    fee: Decimal
+    from_currency: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WithdrawDraftDTO(BaseModel):
+    """DTO схема для передачи черновика с данными о транзакции снятия"""
+
+    from_address: str
+    amount: Decimal
+    fee: Decimal
+    from_currency: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TransferDraftDTO(BaseModel):
+    """DTO схема для передачи черновика с данными о транзакции перевода"""
+
+    from_address: str
+    to_address: str
+    amount: Decimal
+    fee: Decimal
+    from_currency: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExchangeDraftDTO(BaseModel):
+    """DTO схема для передачи черновика с данными о транзакции перевода"""
+
+    from_address: str
+    to_address: str
+    amount: Decimal
+    fee: Decimal
+    from_currency: str
 
     model_config = ConfigDict(from_attributes=True)

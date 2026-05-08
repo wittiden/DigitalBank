@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from dishka.integrations.fastapi import setup_dishka
 
-from app.common.global_handler import app_error_handler
+from app.api.v1.endpoints import operation_router
+from app.common.handler import app_error_handler
 from app.di.container import async_container
+from app.modules.balances.api.v1.endpoints import user_balance_router, admin_balance_router
+from app.modules.balances.exceptions import BalanceRouterError
 from app.modules.transactions.api.v1.endpoints import admin_trn_router
 from app.modules.transactions.exceptions import TrnRouterError
 from app.modules.users.api.v1.endpoints import user_router, admin_router
@@ -14,6 +17,7 @@ app = FastAPI()
 app.add_exception_handler(UserRouterError, app_error_handler)
 app.add_exception_handler(WalletRouterError, app_error_handler)
 app.add_exception_handler(TrnRouterError, app_error_handler)
+app.add_exception_handler(BalanceRouterError, app_error_handler)
 setup_dishka(async_container, app)
 
 app.include_router(user_router)
@@ -21,4 +25,8 @@ app.include_router(admin_router)
 app.include_router(user_wallet_router)
 app.include_router(admin_wallet_router)
 app.include_router(admin_trn_router)
+app.include_router(user_balance_router)
+app.include_router(admin_balance_router)
+app.include_router(operation_router)
+
 

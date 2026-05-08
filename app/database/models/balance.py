@@ -20,7 +20,7 @@ class BalanceModel(Base):
     )
 
     balance_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    currency: Mapped[str] = mapped_column(String(10), nullable=False, unique=True)
+    currency: Mapped[str] = mapped_column(String(15), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 8), default=Decimal('0.00'), nullable=False)
     is_frozen: Mapped[bool] = mapped_column(default=False, nullable=False)
     balance_type: Mapped[BalanceTypesEnum] = mapped_column(Enum(BalanceTypesEnum, name='balance_types_enum'), default=BalanceTypesEnum.UNKNOWN, nullable=False)

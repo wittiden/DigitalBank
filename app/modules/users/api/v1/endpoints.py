@@ -2,6 +2,7 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter
 
+from app.common.uow import UnitOfWork
 from app.modules.users.contracts.responses import FullUserInfoResponse, SecurityUserInfoResponse
 from app.modules.users.contracts.schemas import CreateUserSchema, UpdateUserSchema, CloseUserSchema
 from app.modules.users.contracts.schemas import ShowMyUserSchema
@@ -14,52 +15,52 @@ admin_router = APIRouter(prefix='/api/admin/users', tags=['admin'])
 
 @user_router.post('/', response_model=SecurityUserInfoResponse, summary='Create user')
 @inject
-async def create_user_endpoint(schema: CreateUserSchema, service: FromDishka[CreateUserService]) -> SecurityUserInfoResponse:
+async def create_user_endpoint(schema: CreateUserSchema, service: FromDishka[CreateUserService], uow: FromDishka[UnitOfWork]) -> SecurityUserInfoResponse:
     user = await service.create_user(schema.name, schema.email, schema.password)
     return user
 
 
 @admin_router.post('/', response_model=SecurityUserInfoResponse, summary='Create admin')
 @inject
-async def create_admin_endpoint(schema: CreateUserSchema, service: FromDishka[CreateUserService]) -> SecurityUserInfoResponse:
+async def create_admin_endpoint(schema: CreateUserSchema, service: FromDishka[CreateUserService], uow: FromDishka[UnitOfWork]) -> SecurityUserInfoResponse:
     admin = await service.create_admin(schema.name, schema.email, schema.password)
     return admin
 
 
 @user_router.patch('/me', response_model=SecurityUserInfoResponse, summary='Update user')
 @inject
-async def update_me_endpoint(schema: UpdateUserSchema, service: FromDishka[UpdateUserService]) -> SecurityUserInfoResponse:
+async def update_me_endpoint(schema: UpdateUserSchema, service: FromDishka[UpdateUserService], uow: FromDishka[UnitOfWork]) -> SecurityUserInfoResponse:
     obj = await service.partial_update_user(schema.email, schema.password, schema.data)
     return obj
 
 
 @admin_router.delete('/{user_id}', summary='Delete user')
 @inject
-async def delete_user_by_id_endpoint(user_id: UUID, service: FromDishka[DeleteUserService]) -> None:
+async def delete_user_by_id_endpoint(user_id: UUID, service: FromDishka[DeleteUserService], uow: FromDishka[UnitOfWork]) -> None:
     await service.delete_user_by_id(user_id)
 
 
 @user_router.delete('/', summary='Close user')
 @inject
-async def close_user_endpoint(schema: CloseUserSchema, service: FromDishka[DeleteUserService]) -> None:
+async def close_user_endpoint(schema: CloseUserSchema, service: FromDishka[DeleteUserService], uow: FromDishka[UnitOfWork]) -> None:
     await service.close_user(schema.email, schema.password)
 
 
 @admin_router.patch('/block/{user_id}', summary='Block user')
 @inject
-async def block_user_endpoint(user_id: UUID, service: FromDishka[ManageUserService]) -> None:
+async def block_user_endpoint(user_id: UUID, service: FromDishka[ManageUserService], uow: FromDishka[UnitOfWork]) -> None:
     await service.block_user(user_id)
 
 
 @admin_router.patch('/unblock/{user_id}', summary='Unblock user')
 @inject
-async def unblock_user_endpoint(user_id: UUID, service: FromDishka[ManageUserService]) -> None:
+async def unblock_user_endpoint(user_id: UUID, service: FromDishka[ManageUserService], uow: FromDishka[UnitOfWork]) -> None:
     await service.unblock_user(user_id)
 
 
 @admin_router.get('/{user_id}', response_model=FullUserInfoResponse, summary='Get user by id')
 @inject
-async def get_user_by_id_endpoint(user_id: UUID, service: FromDishka[ShowUserService]) -> FullUserInfoResponse:
+async def get_user_by_id_endpoint(user_id: UUID, service: FromDishka[ShowUserService], uow: FromDishka[UnitOfWork]) -> FullUserInfoResponse:
     obj = await service.show_user_by_id(user_id)
     return obj
 
@@ -73,6 +74,6 @@ async def get_user_by_id_endpoint(user_id: UUID, service: FromDishka[ShowUserSer
 
 @admin_router.get('/', response_model=list[FullUserInfoResponse], summary='Get users')
 @inject
-async def get_users_endpoint(service: FromDishka[ShowUserService], offset: int = 0, limit: int = 100) -> list[FullUserInfoResponse]:
+async def get_users_endpoint(service: FromDishka[ShowUserService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100) -> list[FullUserInfoResponse]:
     objs = await service.show_users(offset, limit)
     return objs

@@ -9,7 +9,6 @@ class FullWalletInfoDTO(BaseModel):
 
     wallet_id: UUID
     address: str
-    pin_hash: str
     is_blocked: bool
     wallet_type: WalletTypesEnum
     user_id: UUID

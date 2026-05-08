@@ -8,6 +8,7 @@ class TransactionTypesEnum(str, Enum):
     DEPOSIT = 'deposit'
     WITHDRAW = 'withdraw'
     EXCHANGE = 'exchange'
+    TRANSFER = 'transfer'
 
 
 class TransactionStatusesEnum(str, Enum):

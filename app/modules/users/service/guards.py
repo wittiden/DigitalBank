@@ -14,19 +14,19 @@ class UserGuards:
     @staticmethod
     def require_user_exists(obj: 'UserModel') -> None:
         if not obj:
-            raise UserNotFoundError('User not found')
+            raise UserNotFoundError('User not found error')
 
     @staticmethod
     def require_user_not_blocked(obj: 'UserModel') -> None:
         if obj.is_blocked:
-            raise UserIsBlockedError('User is blocked')
+            raise UserIsBlockedError('User is blocked error')
 
     @staticmethod
     def require_user_not_unblocked(obj: 'UserModel') -> None:
         if not obj.is_blocked:
-            raise UserIsNotBlockedError('User is unblocked')
+            raise UserIsNotBlockedError('User is unblocked error')
 
     @staticmethod
     def require_verify_pass(password: str, password_hash: str) -> None:
         if not verify_pass(password, password_hash):
-            raise UserPassNotVerifiedError('User password != password_hash')
+            raise UserPassNotVerifiedError('User password != password_hash error')

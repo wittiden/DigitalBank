@@ -36,3 +36,8 @@ class WalletPinNotVerifiedError(WalletRouterError):
 class WalletLimitError(WalletRouterError):
     status_code = 403
     detail = 'Wallet count limit'
+
+
+class WalletPinsIsTheSame(WalletRouterError):
+    status_code = 400
+    detail = 'Wallet old_pin == new_pin'

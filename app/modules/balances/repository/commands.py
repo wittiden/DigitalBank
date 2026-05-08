@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums.balance_enums import BalanceTypesEnum
@@ -13,8 +14,8 @@ class BalanceCommandsRepository:
     def __init__(self, async_session: AsyncSession) -> None:
         self._async_session = async_session
 
-    async def insert_balance_info(self, currency: str, amount: Decimal, balance_type: BalanceTypesEnum) -> 'BalanceModel':
-        obj = BalanceModel(currency=currency, amount=amount, balance_type=balance_type)
+    async def insert_balance_info(self, currency: str, amount: Decimal, balance_type: BalanceTypesEnum, wallet_id: UUID) -> 'BalanceModel':
+        obj = BalanceModel(currency=currency, amount=amount, balance_type=balance_type, wallet_id=wallet_id)
 
         self._async_session.add(obj)
         await self._async_session.flush()

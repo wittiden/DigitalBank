@@ -10,7 +10,6 @@ class FullUserInfoDTO(BaseModel):
     user_id: UUID
     name: str
     email: str
-    password_hash: str
     is_blocked: bool
     user_status: UserStatusesEnum
 

@@ -24,8 +24,10 @@ class UpdateWalletUserSchema(BaseModel):
 
     address: str
     pin: str
-    email: EmailStr
-    password: str
+    old_email: EmailStr
+    old_password: str
+    new_email: EmailStr
+    new_password: str
 
 
 class CloseWalletSchema(BaseModel):
@@ -40,4 +42,3 @@ class ShowMyWalletsSchema(BaseModel):
 
     email: EmailStr
     password: str
-

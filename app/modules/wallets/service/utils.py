@@ -11,4 +11,4 @@ def verify_pin(pin: str, pin_hash: str) -> bool:
     try:
         return bcrypt.checkpw(pin.encode(), pin_hash.encode())
     except Exception:
-        return False
+        raise

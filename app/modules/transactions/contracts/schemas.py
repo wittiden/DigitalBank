@@ -1,35 +1,41 @@
-from uuid import UUID
 from decimal import Decimal
 from pydantic import BaseModel
 
 
-class CreateDepositTrnSchema(BaseModel):
+class DepositSchema(BaseModel):
     """Схема для создания транзакции пополнения"""
 
-    from_wallet_id: UUID
-    to_wallet_id: UUID
+    address: str
+    pin: str
     amount: Decimal
-    fee: Decimal
-    from_currency: str
+    currency: str
 
 
-class CreateWithdrawTrnSchema(BaseModel):
+class WithdrawSchema(BaseModel):
     """Схема для создания транзакции снятия"""
 
-    from_wallet_id: UUID
-    to_wallet_id: UUID
+    address: str
+    pin: str
     amount: Decimal
-    fee: Decimal
-    from_currency: str
+    currency: str
 
 
-class CreateExchangeTrnSchema(BaseModel):
+class TransferSchema(BaseModel):
+    """Схема для создания транзакции пополнения"""
+
+    from_address: str
+    pin: str
+    to_address: str
+    amount: Decimal
+    currency: str
+
+
+class ExchangeSchema(BaseModel):
     """Схема для создания транзакции обмена"""
 
-    from_wallet_id: UUID
-    to_wallet_id: UUID
+    from_address: str
+    pin: str
+    to_address: str
     amount: Decimal
-    fee: Decimal
-    rate: Decimal
     from_currency: str
     to_currency: str

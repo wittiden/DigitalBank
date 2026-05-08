@@ -15,8 +15,8 @@ class TransactionModel(Base):
     __tablename__ = 'transactions'
 
     transaction_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    from_wallet_id: Mapped[UUID] = mapped_column(ForeignKey('wallets.wallet_id'), nullable=False)
-    to_wallet_id: Mapped[UUID] = mapped_column(ForeignKey('wallets.wallet_id'), nullable=False)
+    from_address: Mapped[str] = mapped_column(String(26), ForeignKey('wallets.address'), nullable=False)
+    to_address: Mapped[str] = mapped_column(String(26), ForeignKey('wallets.address'), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 8), nullable=False)
     fee: Mapped[Decimal] = mapped_column(Numeric(18, 8), nullable=False)
     rate: Mapped[Decimal | None] = mapped_column(Numeric(18, 8), nullable=True)
