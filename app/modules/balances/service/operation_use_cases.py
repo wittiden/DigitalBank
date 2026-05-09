@@ -50,7 +50,6 @@ class DepositBalanceService:
                 await self._update_service.update_trn_status(trn.transaction_id, TransactionStatusesEnum.PENDING)
 
                 try:
-
                     balance.amount += amount * fee
                     await self._balance_commands.partial_update_balance(balance, {'amount': balance.amount})
 

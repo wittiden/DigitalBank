@@ -9,8 +9,8 @@ from app.modules.users.contracts.schemas import ShowMyUserSchema
 from app.modules.users.service.use_cases import CreateUserService, ShowUserService, UpdateUserService, \
     DeleteUserService, ManageUserService
 
-user_router = APIRouter(prefix='/api/users', tags=['users'])
-admin_router = APIRouter(prefix='/api/admin/users', tags=['admin'])
+user_router = APIRouter(prefix='/api/v1/users', tags=['users'])
+admin_router = APIRouter(prefix='/api/v1/admin/users', tags=['admin'])
 
 
 @user_router.post('/', response_model=SecurityUserInfoResponse, summary='Create user')

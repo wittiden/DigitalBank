@@ -9,8 +9,8 @@ from app.modules.wallets.contracts.schemas import CreateWalletSchema, CloseWalle
 from app.modules.wallets.service.use_cases import CreateWalletService, DeleteWalletService, ManageWalletService, \
     ShowWalletService, UpdateWalletService
 
-user_wallet_router = APIRouter(prefix='/api/wallets', tags=['users', 'wallets'])
-admin_wallet_router = APIRouter(prefix='/api/admin/wallets', tags=['admin', 'wallets'])
+user_wallet_router = APIRouter(prefix='/api/v1/wallets', tags=['users', 'wallets'])
+admin_wallet_router = APIRouter(prefix='/api/v1/admin/wallets', tags=['admin', 'wallets'])
 
 
 @user_wallet_router.post('/credit', response_model=SecurityWalletInfoResponse, summary='Create credit wallet')

@@ -1,4 +1,7 @@
-class WalletRouterError(Exception):
+from app.common.exceptions.exceptions import RouterError
+
+
+class WalletRouterError(RouterError):
     status_code: int = 400
     detail: str = 'Wallet router error'
 
@@ -34,10 +37,10 @@ class WalletPinNotVerifiedError(WalletRouterError):
 
 
 class WalletLimitError(WalletRouterError):
-    status_code = 403
+    status_code = 409
     detail = 'Wallet count limit'
 
 
 class WalletPinsIsTheSame(WalletRouterError):
-    status_code = 400
+    status_code = 409
     detail = 'Wallet old_pin == new_pin'

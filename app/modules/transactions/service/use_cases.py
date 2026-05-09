@@ -29,7 +29,10 @@ class CreateTrnService:
         except IntegrityError:
             raise TrnCreateError('Error while transaction created')
 
-        logger.info('Create transaction')
+        logger.log(
+            "TRANSACTION",
+            f"Create transaction #{obj.transaction_id}, from_address={obj.from_address}, to_address={obj.to_address}, amount={obj.amount}, fee={obj.fee}, rate={obj.rate}, from_currency={obj.from_currency}, to_currency={obj.to_currency}, started_at={obj.started_at}, status={obj.transaction_status}, type={obj.transaction_type}",
+        )
 
         return obj
 
@@ -73,6 +76,11 @@ class UpdateTrnService:
 
         await self._trn_commands.partial_update_trn(obj, {'transaction_status': new_trn_status})
 
+        logger.log(
+            "TRANSACTION",
+            f"Update transaction #{obj.transaction_id}, new_status={obj.transaction_status}",
+        )
+
         return obj
 
     @debug_log
@@ -82,6 +90,11 @@ class UpdateTrnService:
         TrnGuards.require_trn_exist(obj)
 
         await self._trn_commands.partial_update_trn(obj, {'completed_at': datetime.now()})
+
+        logger.log(
+            "TRANSACTION",
+            f"Update transaction #{obj.transaction_id}, completed_at={obj.completed_at}",
+        )
 
         return obj
 

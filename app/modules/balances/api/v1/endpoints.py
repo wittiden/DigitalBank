@@ -9,8 +9,8 @@ from app.modules.balances.contracts.schemas import CreateRegularBalanceSchema, C
 from app.modules.balances.service.use_cases import CreateBalanceService, ManageBalanceService, ShowBalanceService, \
     DeleteBalanceService
 
-user_balance_router = APIRouter(prefix='/api/balances', tags=['users', 'balance'])
-admin_balance_router = APIRouter(prefix='/api/admin/balances', tags=['admin', 'balance'])
+user_balance_router = APIRouter(prefix='/api/v1/balances', tags=['users', 'balance'])
+admin_balance_router = APIRouter(prefix='/api/v1/admin/balances', tags=['admin', 'balance'])
 
 
 @user_balance_router.post('/regular', response_model=SecurityBalanceInfoResponse, summary='Create regular balance')

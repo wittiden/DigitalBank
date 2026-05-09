@@ -6,7 +6,7 @@ from app.common.uow import UnitOfWork
 from app.modules.transactions.contracts.responses import FullTrnInfoResponse
 from app.modules.transactions.service.use_cases import ShowTrnService
 
-admin_trn_router = APIRouter(prefix='/api/admin/transactions', tags=['admin', 'transactions'])
+admin_trn_router = APIRouter(prefix='/api/v1/admin/transactions', tags=['admin', 'transactions'])
 
 
 @admin_trn_router.get('/{transaction_id}', response_model=FullTrnInfoResponse, summary='Get transaction by id')

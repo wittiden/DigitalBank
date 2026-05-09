@@ -1,4 +1,7 @@
-class UserRouterError(Exception):
+from app.common.exceptions.exceptions import RouterError
+
+
+class UserRouterError(RouterError):
     status_code: int = 400
     detail: str = 'User router error'
 
@@ -34,5 +37,5 @@ class UserIsNotBlockedError(UserRouterError):
 
 
 class UserPassesIsTheSame(UserRouterError):
-    status_code = 400
+    status_code = 409
     detail = 'User old_pass == new_pass'

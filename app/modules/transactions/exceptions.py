@@ -1,4 +1,7 @@
-class TrnRouterError(Exception):
+from app.common.exceptions.exceptions import RouterError
+
+
+class TrnRouterError(RouterError):
     status_code: int = 400
     detail: str = 'Transaction router error'
 

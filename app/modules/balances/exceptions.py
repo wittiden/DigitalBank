@@ -1,4 +1,7 @@
-class BalanceRouterError(Exception):
+from app.common.exceptions.exceptions import RouterError
+
+
+class BalanceRouterError(RouterError):
     status_code = 400
     detail = 'Balance router error'
 
@@ -29,7 +32,7 @@ class BalanceIsNotFrozenError(BalanceRouterError):
 
 
 class BalanceLimitError(BalanceRouterError):
-    status_code = 403
+    status_code = 409
     detail = 'Balance count limit error'
 
 
@@ -39,5 +42,5 @@ class BalanceCurrencyNotFoundError(BalanceRouterError):
 
 
 class BalanceAmountIsLowerError(BalanceRouterError):
-    status_code = 404
+    status_code = 409
     detail = 'Balance amount lower than transaction amount'

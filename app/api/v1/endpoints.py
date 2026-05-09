@@ -8,7 +8,7 @@ from app.modules.balances.service.operation_use_cases import DepositBalanceServi
 from app.modules.transactions.contracts.responses import DepositDraftResponse, TransferDraftResponse, \
     WithdrawDraftResponse
 
-operation_router = APIRouter(prefix='/api/operations', tags=['operations'])
+operation_router = APIRouter(prefix='/api/v1/operations', tags=['operations'])
 
 
 @operation_router.post('/deposit', response_model=DepositDraftResponse, summary='Deposit balance')
