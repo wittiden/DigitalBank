@@ -6,9 +6,7 @@ from app.common.enums.transaction_enums import TransactionStatusesEnum
 from app.modules.balances.exceptions import BalanceAmountIsLowerError, \
     BalanceNotFoundError
 from app.modules.balances.service.guards import BalanceGuards
-from app.modules.transactions.contracts.dtos import DepositDraftDTO, WithdrawDraftDTO
-from app.modules.transactions.contracts.dtos import ExchangeDraftDTO
-from app.modules.transactions.contracts.dtos import TransferDraftDTO
+from app.modules.operations.contracts.dtos import DepositDraftDTO, WithdrawDraftDTO, TransferDraftDTO, ExchangeDraftDTO
 from app.modules.wallets.service.guards import WalletGuards
 
 if TYPE_CHECKING:

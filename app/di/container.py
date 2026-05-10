@@ -7,7 +7,7 @@ from app.common.uow import UnitOfWork
 from app.database.config import settings
 from app.modules.balances.repository.commands import BalanceCommandsRepository
 from app.modules.balances.repository.queries import BalanceQueriesRepository
-from app.modules.balances.service.operation_use_cases import DepositBalanceService, TransferBalanceService, \
+from app.modules.operations.service.use_cases import DepositBalanceService, TransferBalanceService, \
     WithdrawBalanceService, ExchangeBalanceService
 from app.modules.balances.service.use_cases import CreateBalanceService, ManageBalanceService, DeleteBalanceService, \
     ShowBalanceService, UpdateBalanceService
