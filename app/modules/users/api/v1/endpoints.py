@@ -2,10 +2,9 @@ from uuid import UUID
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter
 
-from app.common.uow import UnitOfWork
+from app.unit_of_work.uow import UnitOfWork
 from app.modules.users.contracts.responses import FullUserInfoResponse, SecurityUserInfoResponse
 from app.modules.users.contracts.schemas import CreateUserSchema, UpdateUserSchema, CloseUserSchema
-from app.modules.users.contracts.schemas import ShowMyUserSchema
 from app.modules.users.service.use_cases import CreateUserService, ShowUserService, UpdateUserService, \
     DeleteUserService, ManageUserService
 

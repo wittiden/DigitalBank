@@ -2,10 +2,9 @@ from uuid import UUID
 from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
 
-from app.common.uow import UnitOfWork
+from app.unit_of_work.uow import UnitOfWork
 from app.modules.balances.contracts.responses import SecurityBalanceInfoResponse, FullBalanceInfoResponse
-from app.modules.balances.contracts.schemas import CreateRegularBalanceSchema, CreateForeignBalanceSchema, \
-    ShowBalancesByWalletSchema
+from app.modules.balances.contracts.schemas import CreateRegularBalanceSchema, CreateForeignBalanceSchema
 from app.modules.balances.service.use_cases import CreateBalanceService, ManageBalanceService, ShowBalanceService, \
     DeleteBalanceService
 

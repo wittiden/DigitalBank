@@ -3,7 +3,7 @@ from typing import Any, AsyncGenerator
 from dishka import AsyncContainer, make_async_container, Provider, provide, Scope
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker, AsyncSession
 
-from app.common.uow import UnitOfWork
+from app.unit_of_work.uow import UnitOfWork
 from app.database.config import settings
 from app.modules.balances.repository.commands import BalanceCommandsRepository
 from app.modules.balances.repository.queries import BalanceQueriesRepository

@@ -30,6 +30,7 @@ env/
 # =========================
 __pycache__/
 *.py[cod]
+*.pyc
 *.pyo
 *.pyd
 
@@ -80,3 +81,13 @@ build/
 # Jupyter Notebook
 # =========================
 .ipynb_checkpoints/
+
+# =========================
+# JWT / SSL / Keys
+# =========================
+certs/*.pem
+certs/*.key
+certs/*.crt
+
+**/private*.pem
+**/*private*.key

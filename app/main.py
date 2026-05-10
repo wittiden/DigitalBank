@@ -5,7 +5,7 @@ from dishka.integrations.fastapi import setup_dishka
 
 from app.api.v1.routers import routers
 from app.common.exceptions.exceptions import RouterError
-from app.common.settings.logger import add_logger
+from app.core.settings.logger import add_logger
 from app.di.container import async_container
 from app.common.exceptions.handler import app_exception_handler
 

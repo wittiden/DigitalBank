@@ -7,9 +7,12 @@ alembic~=1.18.4
 fastapi~=0.136.1
 uvicorn~=0.46.0
 
+#auth
+pyjwt[crypto]~=2.12.1
+
 #validation
 pydantic[email]~=2.13.3
-pydantic-settings~=2.14.0
+pydantic-settings~=2.14.1
 
 #di
 dishka~=1.10.1

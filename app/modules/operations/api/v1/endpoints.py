@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
 
-from app.common.uow import UnitOfWork
+from app.unit_of_work.uow import UnitOfWork
 from app.modules.operations.contracts.responses import DepositDraftResponse, TransferDraftResponse, \
     WithdrawDraftResponse
 from app.modules.operations.contracts.schemas import DepositSchema, WithdrawSchema, TransferSchema

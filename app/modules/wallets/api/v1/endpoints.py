@@ -2,10 +2,10 @@ from uuid import UUID
 from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
 
-from app.common.uow import UnitOfWork
+from app.unit_of_work.uow import UnitOfWork
 from app.modules.wallets.contracts.responses import FullWalletInfoResponse, SecurityWalletInfoResponse
 from app.modules.wallets.contracts.schemas import CreateWalletSchema, CloseWalletSchema, \
-    UpdateWalletSchema, ShowMyWalletsSchema, UpdateWalletUserSchema
+    UpdateWalletSchema, UpdateWalletUserSchema
 from app.modules.wallets.service.use_cases import CreateWalletService, DeleteWalletService, ManageWalletService, \
     ShowWalletService, UpdateWalletService
 

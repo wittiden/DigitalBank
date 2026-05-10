@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
 
-from app.common.uow import UnitOfWork
+from app.unit_of_work.uow import UnitOfWork
 from app.modules.transactions.contracts.responses import FullTrnInfoResponse
 from app.modules.transactions.service.use_cases import ShowTrnService
 
