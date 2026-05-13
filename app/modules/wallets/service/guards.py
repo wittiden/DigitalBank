@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from app.modules.wallets.exceptions import WalletNotFoundError, WalletIsBlockedError, WalletIsNotBlockedError, \
-    WalletLimitError, WalletPinNotVerifiedError
+from app.modules.wallets.exceptions import WalletIsAlreadyBlockedError, WalletIsAlreadyUnBlockedError, WalletLimitError, \
+    WalletNotFoundError, WalletPinNotVerifiedError, WalletIsBlockedError
 from app.modules.wallets.service.utils import verify_pin
 
 if TYPE_CHECKING:
@@ -19,12 +19,17 @@ class WalletGuards:
     @staticmethod
     def require_wallet_not_blocked(obj: 'WalletModel') -> None:
         if obj.is_blocked:
-            raise WalletIsBlockedError('User is blocked')
+            raise WalletIsBlockedError('Wallet is blocked')
 
     @staticmethod
-    def require_wallet_not_unblocked(obj: 'WalletModel') -> None:
+    def require_wallet_not_already_blocked(obj: 'WalletModel') -> None:
+        if obj.is_blocked:
+            raise WalletIsAlreadyBlockedError('Wallet is already blocked')
+
+    @staticmethod
+    def require_wallet_not_already_unblocked(obj: 'WalletModel') -> None:
         if not obj.is_blocked:
-            raise WalletIsNotBlockedError('User is unblocked')
+            raise WalletIsAlreadyUnBlockedError('Wallet is already unblocked')
 
     @staticmethod
     def require_wallet_limit(wallets_count: int) -> None:

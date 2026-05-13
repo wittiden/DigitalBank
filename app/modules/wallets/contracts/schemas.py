@@ -1,32 +1,25 @@
-from typing import Any
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class CreateWalletSchema(BaseModel):
     """Схема для создания кошельков"""
 
     pin: str
-    email: EmailStr
-    password: str
 
 
 class UpdateWalletSchema(BaseModel):
+    """Схема для ввода данных при обновлении информации"""
+
+    address: str
+    pin: str
+
+
+class UpdateParamsWalletSchema(BaseModel):
     """Схема для обновления информации кошельков"""
 
-    address: str
-    pin: str
-    data: dict[str, Any]
+    pin: str | None = Field(default=None, examples=[None])
 
-
-class UpdateWalletUserSchema(BaseModel):
-    """Схема для обновления владельца кошелька"""
-
-    address: str
-    pin: str
-    old_email: EmailStr
-    old_password: str
-    new_email: EmailStr
-    new_password: str
+    model_config = ConfigDict(extra='forbid')
 
 
 class CloseWalletSchema(BaseModel):
@@ -34,10 +27,3 @@ class CloseWalletSchema(BaseModel):
 
     address: str
     pin: str
-
-
-class ShowMyWalletsSchema(BaseModel):
-    """Схема для поиска собственных кошельков"""
-
-    email: EmailStr
-    password: str

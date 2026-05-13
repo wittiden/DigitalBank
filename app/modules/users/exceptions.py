@@ -21,17 +21,12 @@ class UserEmailIsExistError(UserRouterError):
     detail: str = 'User email already exist'
 
 
-class UserPassNotVerifiedError(UserRouterError):
-    status_code: int = 401
-    detail: str = 'User password not verified'
-
-
-class UserIsBlockedError(UserRouterError):
+class UserIsAlreadyBlockedError(UserRouterError):
     status_code: int = 409
     detail: str = 'User already blocked'
 
 
-class UserIsNotBlockedError(UserRouterError):
+class UserIsAlreadyUnBlockedError(UserRouterError):
     status_code: int = 409
     detail: str = 'User already unblocked'
 

@@ -1,5 +1,4 @@
-from typing import Any
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class CreateUserSchema(BaseModel):
@@ -13,20 +12,8 @@ class CreateUserSchema(BaseModel):
 class UpdateUserSchema(BaseModel):
     """Схема обновления данных пользователя"""
 
-    email: EmailStr
-    password: str
-    data: dict[str, Any]
+    name: str | None = Field(default=None, examples=[None])
+    email: EmailStr | None = Field(default=None, examples=[None])
+    password: str | None = Field(default=None, examples=[None])
 
-
-class ShowMyUserSchema(BaseModel):
-    """Схема показа моего пользователя"""
-
-    email: EmailStr
-    password: str
-
-
-class CloseUserSchema(BaseModel):
-    """Схема закрытия аккаунта пользователя"""
-
-    email: EmailStr
-    password: str
+    model_config = ConfigDict(extra='forbid')

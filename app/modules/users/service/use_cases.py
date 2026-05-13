@@ -5,12 +5,13 @@ from loguru import logger
 
 from app.common.decorators import debug_log
 from app.common.enums.user_enums import UserStatusesEnum
+from app.modules.auth.service.utils import verify_pass
 from app.modules.users.contracts.dtos import FullUserInfoDTO
 from app.modules.users.contracts.dtos import SecurityUserInfoDTO
 from app.modules.users.exceptions import UserEmailIsExistError, \
     InvalidFieldError, UserPassesIsTheSame
 from app.modules.users.service.guards import UserGuards
-from app.modules.users.service.utils import hash_pass, verify_pass
+from app.modules.users.service.utils import hash_pass
 
 if TYPE_CHECKING:
     from app.database.models.user import UserModel
@@ -46,23 +47,6 @@ class CreateUserService:
         return await self._create_entity(name, email, password, UserStatusesEnum.ADMIN)
 
 
-class LoginUserService:
-    """Сервис по входу в аккаунт для пользователей"""
-
-    def __init__(self, user_queries: 'UserQueriesRepository') -> None:
-        self._user_queries = user_queries
-
-    @debug_log
-    async def login_user(self, email: str, password: str) -> 'SecurityUserInfoDTO':
-        obj: 'UserModel' = await self._user_queries.select_user_by_email(email)
-
-        UserGuards.require_user_exists(obj)
-        UserGuards.require_verify_pass(password, obj.password_hash)
-
-        logger.info(f'Вы вошли в аккаунт #{obj.user_id}')
-        return SecurityUserInfoDTO.model_validate(obj)
-
-
 class DeleteUserService:
     """Сервис по удалению аккаунта пользователя"""
 
@@ -71,7 +55,9 @@ class DeleteUserService:
         self._user_queries = user_queries
 
     @debug_log
-    async def delete_user_by_id(self, user_id: UUID) -> None:
+    async def delete_user_by_id(self, current_user: 'UserModel', user_id: UUID) -> None:
+        UserGuards.require_admin(current_user)
+
         obj = await self._user_queries.select_user_by_id(user_id)
 
         UserGuards.require_user_exists(obj)
@@ -80,15 +66,13 @@ class DeleteUserService:
 
         logger.info(f'Пользователь #{user_id} удален')
 
-    async def close_user(self, email: str, password: str) -> None:
-        obj: 'UserModel' = await self._user_queries.select_user_by_email(email)
+    @debug_log
+    async def close_my_user(self, current_user: 'UserModel') -> None:
+        UserGuards.require_user_exists(current_user)
 
-        UserGuards.require_user_exists(obj)
-        UserGuards.require_verify_pass(password, obj.password_hash)
+        await self._user_commands.delete_user(current_user)
 
-        await self._user_commands.delete_user(obj)
-
-        logger.info(f'Пользователь {email} удален')
+        logger.info(f'Пользователь {current_user.user_id} удален')
 
 
 class UpdateUserService:
@@ -99,36 +83,25 @@ class UpdateUserService:
         self._user_queries = user_queries
 
     @debug_log
-    async def partial_update_user(self, email: str, password: str, data: dict[str, Any]) -> 'SecurityUserInfoDTO':
-        obj: 'UserModel' = await self._user_queries.select_user_by_email(email)
-
-        UserGuards.require_user_exists(obj)
-        UserGuards.require_verify_pass(password, obj.password_hash)
-        UserGuards.require_user_not_blocked(obj)
+    async def partial_update_my_user(self, current_user: 'UserModel', data: dict[str, Any]) -> 'SecurityUserInfoDTO':
+        UserGuards.require_user_exists(current_user)
 
         if 'password' in data.keys():
-            password_hash = hash_pass(data['password'])
-
-            if verify_pass(password, password_hash):
+            if verify_pass(data['password'], current_user.password_hash):
                 raise UserPassesIsTheSame('User old_pass == new_pass')
+
+            password_hash = hash_pass(data['password'])
 
             data.pop('password')
             data['password_hash'] = password_hash
 
-        whitelist = ['name', 'email', 'password_hash']
-
-        for key, value in data.items():
-
-            if key not in whitelist:
-                raise InvalidFieldError('Private field cant change')
-
         try:
-            user = await self._user_commands.partial_update_user(obj, data)
+            current_user = await self._user_commands.partial_update_user(current_user, data)
         except IntegrityError:
-            raise UserEmailIsExistError(f'User email ({email}) must be unique')
+            raise UserEmailIsExistError(f'User email ({current_user.email}) must be unique')
 
-        logger.info(f'Данные пользователя #{user.user_id} обновлены')
-        return SecurityUserInfoDTO.model_validate(user)
+        logger.info(f'Данные пользователя #{current_user.user_id} обновлены')
+        return SecurityUserInfoDTO.model_validate(current_user)
 
 
 class ShowUserService:
@@ -138,13 +111,17 @@ class ShowUserService:
         self._user_queries = user_queries
 
     @debug_log
-    async def show_users(self, offset: int = 0, limit: int = 100) -> list['FullUserInfoDTO']:
+    async def show_users(self, current_user: 'UserModel', offset: int = 0, limit: int = 100) -> list['FullUserInfoDTO']:
+        UserGuards.require_admin(current_user)
+
         objs = await self._user_queries.select_users(offset, limit)
 
         return [FullUserInfoDTO.model_validate(obj) for obj in objs]
 
     @debug_log
-    async def show_user_by_id(self, user_id: UUID) -> 'FullUserInfoDTO':
+    async def show_user_by_id(self, current_user: 'UserModel', user_id: UUID) -> 'FullUserInfoDTO':
+        UserGuards.require_admin(current_user)
+
         obj = await self._user_queries.select_user_by_id(user_id)
 
         UserGuards.require_user_exists(obj)
@@ -152,13 +129,10 @@ class ShowUserService:
         return FullUserInfoDTO.model_validate(obj)
 
     @debug_log
-    async def show_my_user(self, email: str, password: str) -> 'SecurityUserInfoDTO':
-        obj: 'UserModel' = await self._user_queries.select_user_by_email(email)
+    async def show_my_user(self, current_user: 'UserModel') -> 'SecurityUserInfoDTO':
+        UserGuards.require_user_exists(current_user)
 
-        UserGuards.require_user_exists(obj)
-        UserGuards.require_verify_pass(password, obj.password_hash)
-
-        return SecurityUserInfoDTO.model_validate(obj)
+        return SecurityUserInfoDTO.model_validate(current_user)
 
 
 class ManageUserService:
@@ -169,11 +143,13 @@ class ManageUserService:
         self._user_queries = user_queries
 
     @debug_log
-    async def block_user(self, user_id: UUID) -> None:
+    async def block_user(self, current_user: 'UserModel', user_id: UUID) -> None:
+        UserGuards.require_admin(current_user)
+
         obj: 'UserModel' = await self._user_queries.select_user_by_id(user_id)
 
         UserGuards.require_user_exists(obj)
-        UserGuards.require_user_not_blocked(obj)
+        UserGuards.require_user_not_already_blocked(obj)
 
         await self._user_commands.partial_update_user(obj, {'is_blocked': True})
 
@@ -181,11 +157,13 @@ class ManageUserService:
 
 
     @debug_log
-    async def unblock_user(self, user_id: UUID) -> None:
+    async def unblock_user(self, current_user: 'UserModel', user_id: UUID) -> None:
+        UserGuards.require_admin(current_user)
+
         obj: 'UserModel' = await self._user_queries.select_user_by_id(user_id)
 
         UserGuards.require_user_exists(obj)
-        UserGuards.require_user_not_unblocked(obj)
+        UserGuards.require_user_not_already_unblocked(obj)
 
         await self._user_commands.partial_update_user(obj, {'is_blocked': False})
 

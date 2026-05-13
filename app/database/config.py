@@ -15,7 +15,4 @@ class Settings(BaseSettings):
     def async_database_url(self) -> str:
         return f'postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
 
-    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='UTF-8')
-
-
-settings = Settings()
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='UTF-8', extra='ignore')

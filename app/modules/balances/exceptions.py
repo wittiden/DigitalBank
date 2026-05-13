@@ -31,6 +31,11 @@ class BalanceIsNotFrozenError(BalanceRouterError):
     detail = 'Balance already unfrozen error'
 
 
+class BalanceAmountIsNotZeroError(BalanceRouterError):
+    status_code = 409
+    detail = 'Balance amount is not zero error'
+
+
 class BalanceLimitError(BalanceRouterError):
     status_code = 409
     detail = 'Balance count limit error'

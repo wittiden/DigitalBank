@@ -21,6 +21,5 @@ class SecurityWalletInfoDTO(BaseModel):
 
     address: str
     wallet_type: WalletTypesEnum
-    user_id: UUID
 
     model_config = ConfigDict(from_attributes=True)

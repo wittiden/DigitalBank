@@ -1,13 +1,13 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
-from pydantic import BaseModel
-
-BASE_DIR = Path(__file__).resolve().parents[2]
 
 
-class AuthJWT(BaseModel):
-    private_key_path: Path = BASE_DIR / "certs" / "jwt-private.pem"
-    public_key_path: Path = BASE_DIR / "certs" / "jwt-public.pem"
-    algorithm: str = 'RS256'
+class JWTSettings(BaseSettings):
+    """Настройки для работы с jwt токенами"""
 
+    PUBLIC_KEY_PATH: Path
+    PRIVATE_KEY_PATH: Path
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
-auth_jwt = AuthJWT()
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='UTF-8', extra='ignore')

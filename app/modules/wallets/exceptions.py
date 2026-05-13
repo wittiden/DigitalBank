@@ -21,12 +21,17 @@ class WalletNotFoundError(WalletRouterError):
     detail = 'Wallet not found'
 
 
-class WalletIsBlockedError(WalletRouterError):
+class WalletIsAlreadyBlockedError(WalletRouterError):
     status_code = 409
     detail = 'Wallet already blocked'
 
 
-class WalletIsNotBlockedError(WalletRouterError):
+class WalletIsBlockedError(WalletRouterError):
+    status_code = 403
+    detail = 'Wallet already blocked'
+
+
+class WalletIsAlreadyUnBlockedError(WalletRouterError):
     status_code = 409
     detail = 'Wallet already unblocked'
 

@@ -2,20 +2,21 @@ from uuid import UUID
 from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
 
+from app.api.v1.endpoints import CurrentAdmin
 from app.unit_of_work.uow import UnitOfWork
 from app.modules.transactions.contracts.responses import FullTrnInfoResponse
 from app.modules.transactions.service.use_cases import ShowTrnService
 
-admin_trn_router = APIRouter(prefix='/api/v1/admin/transactions', tags=['admin', 'transactions'])
+admin_trn_router = APIRouter(prefix='/api/v1/admin/transactions', tags=['transactions'])
 
 
 @admin_trn_router.get('/{transaction_id}', response_model=FullTrnInfoResponse, summary='Get transaction by id')
 @inject
-async def get_trn_by_id_endpoint(transaction_id: UUID, service: FromDishka[ShowTrnService], uow: FromDishka[UnitOfWork]) -> FullTrnInfoResponse:
-    return await service.show_trn_by_id(transaction_id)
+async def get_trn_by_id_endpoint(current_user: CurrentAdmin, transaction_id: UUID, service: FromDishka[ShowTrnService], uow: FromDishka[UnitOfWork]) -> FullTrnInfoResponse:
+    return await service.show_trn_by_id(current_user, transaction_id)
 
 
 @admin_trn_router.get('/', response_model=list[FullTrnInfoResponse], summary='Get all transactions')
 @inject
-async def get_transactions_endpoint(service: FromDishka[ShowTrnService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100) -> list[FullTrnInfoResponse]:
-    return await service.show_trns(offset, limit)
+async def get_transactions_endpoint(current_user: CurrentAdmin, service: FromDishka[ShowTrnService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100) -> list[FullTrnInfoResponse]:
+    return await service.show_trns(current_user, offset, limit)

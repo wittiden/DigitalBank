@@ -10,8 +10,10 @@ from app.common.enums.transaction_enums import TransactionTypesEnum, Transaction
 from app.modules.transactions.contracts.dtos import FullTrnInfoDTO
 from app.modules.transactions.exceptions import TrnCreateError, TrnCurrenciesIsTheSameError
 from app.modules.transactions.service.guards import TrnGuards
+from app.modules.users.service.guards import UserGuards
 
 if TYPE_CHECKING:
+    from app.database.models import UserModel
     from app.database.models import TransactionModel
     from app.modules.transactions.repository.commands import TrnCommandsRepository
     from app.modules.transactions.repository.queries import TrnQueriesRepository
@@ -106,13 +108,17 @@ class ShowTrnService:
         self._trn_queries = trn_queries
 
     @debug_log
-    async def show_trns(self, offset: int = 0, limit: int = 0) -> list['FullTrnInfoDTO']:
+    async def show_trns(self, current_user: 'UserModel', offset: int = 0, limit: int = 100) -> list['FullTrnInfoDTO']:
+        UserGuards.require_admin(current_user)
+
         objs = await self._trn_queries.select_trns(offset, limit)
 
         return [FullTrnInfoDTO.model_validate(obj) for obj in objs]
 
     @debug_log
-    async def show_trn_by_id(self, trn_id: UUID) -> 'FullTrnInfoDTO':
+    async def show_trn_by_id(self, current_user: 'UserModel', trn_id: UUID) -> 'FullTrnInfoDTO':
+        UserGuards.require_admin(current_user)
+
         obj = await self._trn_queries.select_trn_by_id(trn_id)
 
         return FullTrnInfoDTO.model_validate(obj)

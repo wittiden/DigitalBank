@@ -9,7 +9,6 @@ class UnitOfWork:
         self._async_session = async_session
 
     async def __aenter__(self) -> 'UnitOfWork':
-        await self._async_session.begin()
         return self
 
     async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:

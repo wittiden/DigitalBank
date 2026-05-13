@@ -7,12 +7,14 @@ from app.common.decorators import debug_log
 from app.common.enums.balance_enums import BalanceTypesEnum
 from app.modules.balances.contracts.dtos import FullBalanceInfoDTO
 from app.modules.balances.contracts.dtos import SecurityBalanceInfoDTO
+from app.modules.balances.exceptions import BalanceAmountIsNotZeroError, BalanceCurrencyNotFoundError
 from app.modules.balances.service.guards import BalanceGuards
+from app.modules.users.service.guards import UserGuards
 from app.modules.wallets.service.guards import WalletGuards
 
 if TYPE_CHECKING:
+    from app.database.models import UserModel
     from app.database.models import WalletModel
-    from app.database.models import BalanceModel
     from app.modules.wallets.repository.queries import WalletQueriesRepository
     from app.modules.balances.repository.commands import BalanceCommandsRepository
     from app.modules.balances.repository.queries import BalanceQueriesRepository
@@ -26,7 +28,9 @@ class CreateBalanceService:
         self._balance_commands = balance_commands
         self._balance_queries = balance_queries
 
-    async def _create_balance(self, currency: str, amount: Decimal, balance_type: BalanceTypesEnum, address: str, pin: str) -> 'SecurityBalanceInfoDTO':
+    async def _create_balance(self, current_user: 'UserModel', address: str, pin: str, currency: str, amount: Decimal, balance_type: BalanceTypesEnum) -> 'SecurityBalanceInfoDTO':
+        UserGuards.require_user_exists(current_user)
+
         obj: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
 
         WalletGuards.require_wallet_exists(obj)
@@ -42,12 +46,12 @@ class CreateBalanceService:
         return SecurityBalanceInfoDTO.model_validate(balance)
 
     @debug_log
-    async def create_regular_balance(self, currency: str, amount: Decimal, address: str, pin: str) -> 'SecurityBalanceInfoDTO':
-        return await self._create_balance(currency, amount, BalanceTypesEnum.REGULAR, address, pin)
+    async def create_regular_balance(self, current_user: 'UserModel', address: str, pin: str, currency: str, amount: Decimal) -> 'SecurityBalanceInfoDTO':
+        return await self._create_balance(current_user, address, pin, currency, amount, BalanceTypesEnum.REGULAR)
 
     @debug_log
-    async def create_foreign_balance(self, currency: str, amount: Decimal, address: str, pin: str) -> 'SecurityBalanceInfoDTO':
-        return await self._create_balance(currency, amount, BalanceTypesEnum.FOREIGN, address, pin)
+    async def create_foreign_balance(self, current_user: 'UserModel', address: str, pin: str, currency: str, amount: Decimal) -> 'SecurityBalanceInfoDTO':
+        return await self._create_balance(current_user, address, pin, currency, amount, BalanceTypesEnum.FOREIGN)
 
 
 class ManageBalanceService:
@@ -58,7 +62,9 @@ class ManageBalanceService:
         self._balance_queries = balance_queries
 
     @debug_log
-    async def freeze_balance(self, balance_id: UUID) -> None:
+    async def freeze_balance(self, current_user: 'UserModel', balance_id: UUID) -> None:
+        UserGuards.require_admin(current_user)
+
         obj = await self._balance_queries.select_balance_by_id(balance_id)
 
         BalanceGuards.require_balance_exist(obj)
@@ -69,7 +75,9 @@ class ManageBalanceService:
         logger.info(f'Баланс #{balance_id} заморожен')
 
     @debug_log
-    async def unfreeze_balance(self, balance_id: UUID) -> None:
+    async def unfreeze_balance(self, current_user: 'UserModel', balance_id: UUID) -> None:
+        UserGuards.require_admin(current_user)
+
         obj = await self._balance_queries.select_balance_by_id(balance_id)
 
         BalanceGuards.require_balance_exist(obj)
@@ -80,33 +88,18 @@ class ManageBalanceService:
         logger.info(f'Баланс #{balance_id} разморожен')
 
 
-class UpdateBalanceService:
-    """Сервис по обновлению информации баланса"""
-
-    def __init__(self, balance_commands: 'BalanceCommandsRepository', balance_queries: 'BalanceQueriesRepository') -> None:
-        self._balance_commands = balance_commands
-        self._balance_queries = balance_queries
-
-    async def update_balance_amount(self, balance_id: UUID, new_amount: Decimal) -> 'BalanceModel':
-        balance: 'BalanceModel' = await self._balance_queries.select_balance_by_id(balance_id)
-        BalanceGuards.require_balance_exist(balance)
-        BalanceGuards.require_balance_not_frozen(balance)
-
-        await self._balance_commands.partial_update_balance(balance, {'amount': new_amount})
-
-        logger.info(f'Сумма баланса в валюте {balance.currency} обновлена')
-        return balance
-
-
 class DeleteBalanceService:
     """Сервис по удалению балансов"""
 
-    def __init__(self, balance_commands: 'BalanceCommandsRepository', balance_queries: 'BalanceQueriesRepository') -> None:
+    def __init__(self, balance_commands: 'BalanceCommandsRepository', balance_queries: 'BalanceQueriesRepository', wallet_queries: 'WalletQueriesRepository') -> None:
         self._balance_commands = balance_commands
         self._balance_queries = balance_queries
+        self._wallet_queries = wallet_queries
 
     @debug_log
-    async def delete_balance_by_id(self, balance_id: UUID) -> None:
+    async def delete_balance_by_id(self, current_user: 'UserModel', balance_id: UUID) -> None:
+        UserGuards.require_admin(current_user)
+
         obj = await self._balance_queries.select_balance_by_id(balance_id)
 
         BalanceGuards.require_balance_exist(obj)
@@ -114,6 +107,26 @@ class DeleteBalanceService:
         await self._balance_commands.delete_balance(obj)
 
         logger.info(f'Баланс {balance_id} удален')
+
+    @debug_log
+    async def close_balance(self, current_user: 'UserModel', address: str, pin: str, currency: str) -> None:
+        UserGuards.require_user_exists(current_user)
+
+        wallet: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
+        WalletGuards.require_verify_pin(pin, wallet.pin_hash)
+        WalletGuards.require_wallet_not_blocked(wallet)
+
+        balances = await self._balance_queries.select_balances_by_wallet_id(wallet.wallet_id)
+
+        for balance in balances:
+            if balance.currency == currency:
+                if balance.amount != 0:
+                    raise BalanceAmountIsNotZeroError('Balance amount is not zero error')
+
+                await self._balance_commands.delete_balance(balance)
+
+        else:
+            raise BalanceCurrencyNotFoundError('Balance currency not found error')
 
 
 class ShowBalanceService:
@@ -124,12 +137,17 @@ class ShowBalanceService:
         self._balance_queries = balance_queries
 
     @debug_log
-    async def show_balances(self, offset: int = 0, limit: int = 100) -> list['FullBalanceInfoDTO']:
+    async def show_balances(self, current_user: 'UserModel', offset: int = 0, limit: int = 100) -> list['FullBalanceInfoDTO']:
+        UserGuards.require_admin(current_user)
+
         objs = await self._balance_queries.select_balances(offset, limit)
+
         return [FullBalanceInfoDTO.model_validate(obj) for obj in objs]
 
     @debug_log
-    async def show_balance_by_id(self, balance_id: UUID) -> 'FullBalanceInfoDTO':
+    async def show_balance_by_id(self, current_user: 'UserModel', balance_id: UUID) -> 'FullBalanceInfoDTO':
+        UserGuards.require_admin(current_user)
+
         obj = await self._balance_queries.select_balance_by_id(balance_id)
 
         BalanceGuards.require_balance_exist(obj)
@@ -137,18 +155,20 @@ class ShowBalanceService:
         return FullBalanceInfoDTO.model_validate(obj)
 
     @debug_log
-    async def show_balances_by_wallet_id(self, wallet_id: UUID) -> list['FullBalanceInfoDTO']:
+    async def show_balances_by_wallet_id(self, current_user: 'UserModel', wallet_id: UUID) -> list['FullBalanceInfoDTO']:
+        UserGuards.require_admin(current_user)
+
         objs = await self._balance_queries.select_balances_by_wallet_id(wallet_id)
 
         return [FullBalanceInfoDTO.model_validate(obj) for obj in objs]
 
-    @debug_log
-    async def show_balances_by_wallet(self, address: str, pin: str) -> list['SecurityBalanceInfoDTO']:
-        obj: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
-
-        WalletGuards.require_wallet_exists(obj)
-        WalletGuards.require_verify_pin(pin, obj.pin_hash)
-
-        balances = await self._balance_queries.select_balances_by_wallet_id(obj.wallet_id)
-
-        return [SecurityBalanceInfoDTO.model_validate(balance) for balance in balances]
+    # @debug_log
+    # async def show_balances_by_wallet(self, address: str, pin: str) -> list['SecurityBalanceInfoDTO']:
+    #     obj: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
+    #
+    #     WalletGuards.require_wallet_exists(obj)
+    #     WalletGuards.require_verify_pin(pin, obj.pin_hash)
+    #
+    #     balances = await self._balance_queries.select_balances_by_wallet_id(obj.wallet_id)
+    #
+    #     return [SecurityBalanceInfoDTO.model_validate(balance) for balance in balances]
