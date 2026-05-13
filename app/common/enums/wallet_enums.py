@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class WalletTypesEnum(str, Enum):
+class WalletTypesEnum(StrEnum):
     """Енум для хранения типов кошелька"""
 
     UNKNOWN = 'unknown'

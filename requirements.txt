@@ -25,5 +25,6 @@ loguru~=0.7.3
 
 #linter, formater
 ruff~=0.15.12
+mypy~=2.1.0
 
 

@@ -1,4 +1,5 @@
 from uuid import UUID
+
 from pydantic import BaseModel, EmailStr
 
 from app.common.enums.user_enums import UserStatusesEnum

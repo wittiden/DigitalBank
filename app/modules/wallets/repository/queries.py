@@ -1,6 +1,7 @@
 from uuid import UUID
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 
 from app.database.models import WalletModel
 
@@ -15,7 +16,7 @@ class WalletQueriesRepository:
         return await self._async_session.get(WalletModel, wallet_id)
 
     async def select_wallets_by_user_id(self, user_id: UUID) -> list['WalletModel']:
-        objs  = await self._async_session.execute(select(WalletModel).where(WalletModel.user_id == user_id))
+        objs = await self._async_session.execute(select(WalletModel).where(WalletModel.user_id == user_id))
         return list(objs.scalars().all())
 
     async def select_wallets(self, offset: int = 0, limit: int = 100) -> list['WalletModel']:
@@ -26,5 +27,5 @@ class WalletQueriesRepository:
         return (await self._async_session.execute(select(WalletModel).where(WalletModel.address == address))).scalar_one_or_none()
 
     async def select_wallets_count_by_user_id(self, user_id: UUID) -> int:
-        obj  = await self._async_session.execute(select(func.count(WalletModel.wallet_id)).where(WalletModel.user_id == user_id))
+        obj = await self._async_session.execute(select(func.count(WalletModel.wallet_id)).where(WalletModel.user_id == user_id))
         return obj.scalar()

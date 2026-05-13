@@ -1,23 +1,22 @@
 from typing import TYPE_CHECKING
-from sqlalchemy import ForeignKey, Enum, Index, String
 from uuid import UUID, uuid4
+
+from sqlalchemy import Enum, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums.wallet_enums import WalletTypesEnum
 from app.database.base import Base
 
 if TYPE_CHECKING:
-    from app.database.models.user import UserModel
     from app.database.models.balance import BalanceModel
+    from app.database.models.user import UserModel
 
 
 class WalletModel(Base):
     """Модель для хранения данных кошельков в бд"""
 
     __tablename__ = 'wallets'
-    __table_args__ = (
-        Index('user_id_index', 'user_id'),
-    )
+    __table_args__ = (Index('user_id_index', 'user_id'),)
 
     wallet_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     address: Mapped[str] = mapped_column(String(26), default=lambda: uuid4().hex[:26], nullable=False, unique=True)
@@ -30,7 +29,4 @@ class WalletModel(Base):
     balances: Mapped[list['BalanceModel']] = relationship('BalanceModel', back_populates='wallet', cascade='all, delete-orphan')
 
     def __repr__(self) -> str:
-        return (f'wallet_id: {self.wallet_id} -> user_id: {self.user_id},'
-                f' address: {self.address},'
-                f' is_blocked: {self.is_blocked},'
-                f' type: {self.wallet_type}')
+        return f'wallet_id: {self.wallet_id} -> user_id: {self.user_id}, address: {self.address}, is_blocked: {self.is_blocked}, type: {self.wallet_type}'

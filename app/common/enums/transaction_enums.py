@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class TransactionTypesEnum(str, Enum):
+class TransactionTypesEnum(StrEnum):
     """Енум для хранения типов транзакций"""
 
     UNKNOWN = 'unknown'
@@ -11,7 +11,7 @@ class TransactionTypesEnum(str, Enum):
     TRANSFER = 'transfer'
 
 
-class TransactionStatusesEnum(str, Enum):
+class TransactionStatusesEnum(StrEnum):
     """Енум для хранения статусов транзакций"""
 
     UNKNOWN = 'unknown'

@@ -1,7 +1,8 @@
-from uuid import UUID, uuid4
 from typing import TYPE_CHECKING
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from uuid import UUID, uuid4
+
 from sqlalchemy import Enum, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums.user_enums import UserStatusesEnum
 from app.database.base import Base
@@ -25,8 +26,4 @@ class UserModel(Base):
     wallets: Mapped[list['WalletModel']] = relationship('WalletModel', back_populates='owner', cascade='all, delete-orphan')
 
     def __repr__(self) -> str:
-        return (f'user_id: {self.user_id},'
-                f' name: {self.name},'
-                f' email: {self.email},'
-                f' is_blocked: {self.is_blocked},'
-                f' status: {self.user_status}')
+        return f'user_id: {self.user_id}, name: {self.name}, email: {self.email}, is_blocked: {self.is_blocked}, status: {self.user_status}'

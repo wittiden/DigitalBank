@@ -1,6 +1,7 @@
-from fastapi.responses import JSONResponse
-from fastapi import Request
 from typing import TYPE_CHECKING
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
 
 if TYPE_CHECKING:
     from app.common.exceptions.exceptions import RouterError
@@ -13,5 +14,5 @@ async def app_exception_handler(request: Request, exc: 'RouterError') -> JSONRes
             'error': exc.__class__.__name__,
             'detail': exc.detail,
             'path': str(request.url),
-        }
+        },
     )

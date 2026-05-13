@@ -1,6 +1,7 @@
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums.balance_enums import BalanceTypesEnum

@@ -1,15 +1,14 @@
-from typing import Any, TYPE_CHECKING
-from sqlalchemy.exc import IntegrityError
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
+
 from loguru import logger
+from sqlalchemy.exc import IntegrityError
 
 from app.common.decorators import debug_log
 from app.common.enums.user_enums import UserStatusesEnum
 from app.modules.auth.service.utils import verify_pass
-from app.modules.users.contracts.dtos import FullUserInfoDTO
-from app.modules.users.contracts.dtos import SecurityUserInfoDTO
-from app.modules.users.exceptions import UserEmailIsExistError, \
-    InvalidFieldError, UserPassesIsTheSame
+from app.modules.users.contracts.dtos import FullUserInfoDTO, SecurityUserInfoDTO
+from app.modules.users.exceptions import UserEmailIsExistError, UserPassesIsTheSame
 from app.modules.users.service.guards import UserGuards
 from app.modules.users.service.utils import hash_pass
 
@@ -29,11 +28,9 @@ class CreateUserService:
         password_hash = hash_pass(password)
 
         try:
-            entity: 'UserModel' = await self._user_commands.insert_user_info(name=name, email=email,
-                                                                                password_hash=password_hash,
-                                                                                user_status=user_status)
-        except IntegrityError:
-            raise UserEmailIsExistError(f'User email ({email}) must be unique')
+            entity: UserModel = await self._user_commands.insert_user_info(name=name, email=email, password_hash=password_hash, user_status=user_status)
+        except IntegrityError as err:
+            raise UserEmailIsExistError(f'User email ({email}) must be unique') from err
 
         logger.info(f'Пользователь #{entity.user_id} создан')
         return SecurityUserInfoDTO.model_validate(entity)
@@ -86,7 +83,7 @@ class UpdateUserService:
     async def partial_update_my_user(self, current_user: 'UserModel', data: dict[str, Any]) -> 'SecurityUserInfoDTO':
         UserGuards.require_user_exists(current_user)
 
-        if 'password' in data.keys():
+        if 'password' in data:
             if verify_pass(data['password'], current_user.password_hash):
                 raise UserPassesIsTheSame('User old_pass == new_pass')
 
@@ -97,8 +94,8 @@ class UpdateUserService:
 
         try:
             current_user = await self._user_commands.partial_update_user(current_user, data)
-        except IntegrityError:
-            raise UserEmailIsExistError(f'User email ({current_user.email}) must be unique')
+        except IntegrityError as err:
+            raise UserEmailIsExistError(f'User email ({current_user.email}) must be unique') from err
 
         logger.info(f'Данные пользователя #{current_user.user_id} обновлены')
         return SecurityUserInfoDTO.model_validate(current_user)
@@ -146,7 +143,7 @@ class ManageUserService:
     async def block_user(self, current_user: 'UserModel', user_id: UUID) -> None:
         UserGuards.require_admin(current_user)
 
-        obj: 'UserModel' = await self._user_queries.select_user_by_id(user_id)
+        obj: UserModel = await self._user_queries.select_user_by_id(user_id)
 
         UserGuards.require_user_exists(obj)
         UserGuards.require_user_not_already_blocked(obj)
@@ -155,12 +152,11 @@ class ManageUserService:
 
         logger.info(f'Пользователь #{obj.user_id} заблокирован')
 
-
     @debug_log
     async def unblock_user(self, current_user: 'UserModel', user_id: UUID) -> None:
         UserGuards.require_admin(current_user)
 
-        obj: 'UserModel' = await self._user_queries.select_user_by_id(user_id)
+        obj: UserModel = await self._user_queries.select_user_by_id(user_id)
 
         UserGuards.require_user_exists(obj)
         UserGuards.require_user_not_already_unblocked(obj)

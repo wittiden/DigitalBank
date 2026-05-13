@@ -1,12 +1,10 @@
-from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter
 
+from app.modules.operations.contracts.responses import DepositDraftResponse, TransferDraftResponse, WithdrawDraftResponse
+from app.modules.operations.contracts.schemas import DepositSchema, TransferSchema, WithdrawSchema
+from app.modules.operations.service.use_cases import DepositBalanceService, TransferBalanceService, WithdrawBalanceService
 from app.unit_of_work.uow import UnitOfWork
-from app.modules.operations.contracts.responses import DepositDraftResponse, TransferDraftResponse, \
-    WithdrawDraftResponse
-from app.modules.operations.contracts.schemas import DepositSchema, WithdrawSchema, TransferSchema
-from app.modules.operations.service.use_cases import DepositBalanceService, TransferBalanceService, \
-    WithdrawBalanceService
 
 operation_router = APIRouter(prefix='/api/v1/operations', tags=['operations'])
 

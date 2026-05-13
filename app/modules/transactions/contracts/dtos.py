@@ -1,9 +1,10 @@
 from datetime import datetime
-from uuid import UUID
 from decimal import Decimal
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict
 
-from app.common.enums.transaction_enums import TransactionTypesEnum, TransactionStatusesEnum
+from app.common.enums.transaction_enums import TransactionStatusesEnum, TransactionTypesEnum
 
 
 class FullTrnInfoDTO(BaseModel):

@@ -1,5 +1,5 @@
 from app.database.models import BalanceModel
-from app.modules.balances.exceptions import BalanceNotFoundError, BalanceIsFrozenError, BalanceLimitError
+from app.modules.balances.exceptions import BalanceIsFrozenError, BalanceLimitError, BalanceNotFoundError
 
 
 class BalanceGuards:

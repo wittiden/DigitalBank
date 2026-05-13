@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from app.common.enums.user_enums import UserStatusesEnum
 from app.modules.auth.exceptions import ForbiddenError
-from app.modules.users.exceptions import UserNotFoundError, UserIsAlreadyBlockedError, UserIsAlreadyUnBlockedError
+from app.modules.users.exceptions import UserIsAlreadyBlockedError, UserIsAlreadyUnBlockedError, UserNotFoundError
 
 if TYPE_CHECKING:
     from app.database.models import UserModel
@@ -19,7 +19,7 @@ class UserGuards:
     @staticmethod
     def require_admin(obj: 'UserModel') -> None:
         if obj.user_status != UserStatusesEnum.ADMIN:
-            raise ForbiddenError("Admin privileges required")
+            raise ForbiddenError('Admin privileges required')
 
     @staticmethod
     def require_user_not_already_blocked(obj: 'UserModel') -> None:

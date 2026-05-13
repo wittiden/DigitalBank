@@ -1,5 +1,5 @@
-from fastapi import APIRouter
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter
 
 from app.modules.auth.contracts.dtos import TokenInfoDTO
 from app.modules.auth.contracts.responses import TokenInfoResponse

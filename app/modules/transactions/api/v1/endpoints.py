@@ -1,11 +1,12 @@
 from uuid import UUID
-from fastapi import APIRouter
+
 from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter
 
 from app.api.v1.endpoints import CurrentAdmin
-from app.unit_of_work.uow import UnitOfWork
 from app.modules.transactions.contracts.responses import FullTrnInfoResponse
 from app.modules.transactions.service.use_cases import ShowTrnService
+from app.unit_of_work.uow import UnitOfWork
 
 admin_trn_router = APIRouter(prefix='/api/v1/admin/transactions', tags=['transactions'])
 
@@ -18,5 +19,7 @@ async def get_trn_by_id_endpoint(current_user: CurrentAdmin, transaction_id: UUI
 
 @admin_trn_router.get('/', response_model=list[FullTrnInfoResponse], summary='Get all transactions')
 @inject
-async def get_transactions_endpoint(current_user: CurrentAdmin, service: FromDishka[ShowTrnService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100) -> list[FullTrnInfoResponse]:
+async def get_transactions_endpoint(
+    current_user: CurrentAdmin, service: FromDishka[ShowTrnService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100
+) -> list[FullTrnInfoResponse]:
     return await service.show_trns(current_user, offset, limit)

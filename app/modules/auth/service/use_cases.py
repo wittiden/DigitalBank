@@ -1,19 +1,20 @@
-from loguru import logger
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
+
 import jwt
 from jwt import InvalidTokenError
-from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING
+from loguru import logger
 
 from app.common.enums.user_enums import UserStatusesEnum
 from app.modules.auth.contracts.dtos import TokenInfoDTO
-from app.modules.auth.exceptions import TokenInvalidError, ForbiddenError
+from app.modules.auth.exceptions import ForbiddenError, TokenInvalidError
 from app.modules.auth.service.guards import AuthGuards
 from app.modules.users.service.guards import UserGuards
 
 if TYPE_CHECKING:
-    from app.modules.users.repository.queries import UserQueriesRepository
     from app.core.settings.jwt import JWTSettings
     from app.database.models import UserModel
+    from app.modules.users.repository.queries import UserQueriesRepository
 
 
 class ManageTokenService:
@@ -29,29 +30,17 @@ class ManageTokenService:
         return self._jwt_settings.PRIVATE_KEY_PATH.read_text()
 
     def encode_jwt(self, payload: dict) -> str:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
-        payload.update({
-            **payload,
-            'iat': now,
-            'exp': now + timedelta(minutes=self._jwt_settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        })
+        payload.update({**payload, 'iat': now, 'exp': now + timedelta(minutes=self._jwt_settings.ACCESS_TOKEN_EXPIRE_MINUTES)})
 
-        return jwt.encode(
-            payload=payload,
-            key=self._private_key(),
-            algorithm=self._jwt_settings.ALGORITHM
-        )
+        return jwt.encode(payload=payload, key=self._private_key(), algorithm=self._jwt_settings.ALGORITHM)
 
     def decode_jwt(self, token: str) -> dict:
         try:
-            return jwt.decode(
-                token,
-                key=self._public_key(),
-                algorithms=[self._jwt_settings.ALGORITHM]
-            )
-        except InvalidTokenError:
-            raise TokenInvalidError('Token invalid error')
+            return jwt.decode(token, key=self._public_key(), algorithms=[self._jwt_settings.ALGORITHM])
+        except InvalidTokenError as err:
+            raise TokenInvalidError('Token invalid error') from err
 
 
 class AuthService:
@@ -62,21 +51,16 @@ class AuthService:
         self._user_queries = user_queries
 
     async def login_user(self, email: str, password: str) -> 'TokenInfoDTO':
-        obj: 'UserModel' = await self._user_queries.select_user_by_email(email)
+        obj: UserModel = await self._user_queries.select_user_by_email(email)
 
         UserGuards.require_user_exists(obj)
         AuthGuards.require_verify_pass(password, obj.password_hash)
         AuthGuards.require_user_not_blocked(obj)
 
-        token = self._manage_service.encode_jwt({
-            'sub': str(obj.user_id),
-            'role': obj.user_status.value
-        })
+        token = self._manage_service.encode_jwt({'sub': str(obj.user_id), 'role': obj.user_status.value})
 
         logger.info(f'Вы вошли в аккаунт #{obj.user_id}')
-        return TokenInfoDTO(
-            token=token
-        )
+        return TokenInfoDTO(token=token)
 
 
 class ShowCurrentUserService:

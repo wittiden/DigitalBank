@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UserStatusesEnum(str, Enum):
+class UserStatusesEnum(StrEnum):
     """Енум для хранения статусов пользователя"""
 
     UNKNOWN = 'unknown'

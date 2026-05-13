@@ -1,20 +1,19 @@
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
+
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
-from typing import TYPE_CHECKING, Any
 
 from app.common.decorators import debug_log
 from app.common.enums.wallet_enums import WalletTypesEnum
 from app.modules.users.service.guards import UserGuards
-from app.modules.wallets.contracts.dtos import FullWalletInfoDTO
-from app.modules.wallets.contracts.dtos import SecurityWalletInfoDTO
+from app.modules.wallets.contracts.dtos import FullWalletInfoDTO, SecurityWalletInfoDTO
 from app.modules.wallets.exceptions import WalletCreateError, WalletPinsIsTheSame
 from app.modules.wallets.service.guards import WalletGuards
 from app.modules.wallets.service.utils import hash_pin, verify_pin
 
 if TYPE_CHECKING:
-    from app.database.models import WalletModel
-    from app.database.models import UserModel
+    from app.database.models import UserModel, WalletModel
     from app.modules.wallets.repository.commands import WalletCommandsRepository
     from app.modules.wallets.repository.queries import WalletQueriesRepository
 
@@ -36,8 +35,8 @@ class CreateWalletService:
 
         try:
             wallet = await self._wallet_commands.create_wallet(pin_hash, wallet_type, current_user.user_id)
-        except IntegrityError:
-            raise WalletCreateError('Error while wallet creating')
+        except IntegrityError as err:
+            raise WalletCreateError('Error while wallet creating') from err
 
         logger.info(f'Кошелек {wallet.address} создан')
         return SecurityWalletInfoDTO.model_validate(wallet)
@@ -62,13 +61,13 @@ class UpdateWalletService:
     async def partial_update_my_wallet(self, current_user: 'UserModel', address: str, pin: str, data: dict[str, Any]) -> 'SecurityWalletInfoDTO':
         UserGuards.require_user_exists(current_user)
 
-        obj: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
+        obj: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
 
         WalletGuards.require_wallet_exists(obj)
         WalletGuards.require_verify_pin(pin, obj.pin_hash)
         WalletGuards.require_wallet_not_blocked(obj)
 
-        if 'pin' in data.keys():
+        if 'pin' in data:
             pin_hash = hash_pin(data['pin'])
 
             if verify_pin(pin, pin_hash):
@@ -78,7 +77,6 @@ class UpdateWalletService:
             data['pin_hash'] = pin_hash
 
         for key, value in data.items():
-
             await self._wallet_commands.partial_update_wallet(obj, {key: value})
 
         logger.info(f'Информация кошелька {address} обновлена')
@@ -108,7 +106,7 @@ class DeleteWalletService:
     async def close_my_wallet(self, current_user: 'UserModel', address: str, pin: str) -> None:
         UserGuards.require_user_exists(current_user)
 
-        obj: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
+        obj: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
 
         WalletGuards.require_wallet_exists(obj)
         WalletGuards.require_verify_pin(pin, obj.pin_hash)
@@ -129,7 +127,7 @@ class ManageWalletService:
     async def block_wallet(self, current_user: 'UserModel', wallet_id: UUID) -> None:
         UserGuards.require_admin(current_user)
 
-        obj: 'WalletModel' = await self._wallet_queries.select_wallet_by_id(wallet_id)
+        obj: WalletModel = await self._wallet_queries.select_wallet_by_id(wallet_id)
 
         WalletGuards.require_wallet_exists(obj)
         WalletGuards.require_wallet_not_already_blocked(obj)
@@ -142,7 +140,7 @@ class ManageWalletService:
     async def unblock_wallet(self, current_user: 'UserModel', wallet_id: UUID) -> None:
         UserGuards.require_admin(current_user)
 
-        obj: 'WalletModel' = await self._wallet_queries.select_wallet_by_id(wallet_id)
+        obj: WalletModel = await self._wallet_queries.select_wallet_by_id(wallet_id)
 
         WalletGuards.require_wallet_exists(obj)
         WalletGuards.require_wallet_not_already_unblocked(obj)
@@ -185,7 +183,10 @@ class ShowWalletService:
         return [FullWalletInfoDTO.model_validate(obj) for obj in objs]
 
     @debug_log
-    async def show_my_wallets(self, current_user: 'UserModel',) -> list['SecurityWalletInfoDTO']:
+    async def show_my_wallets(
+        self,
+        current_user: 'UserModel',
+    ) -> list['SecurityWalletInfoDTO']:
         UserGuards.require_user_exists(current_user)
 
         objs = await self._wallet_queries.select_wallets_by_user_id(current_user.user_id)

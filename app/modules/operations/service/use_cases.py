@@ -3,14 +3,13 @@ from typing import TYPE_CHECKING
 
 from app.common.decorators import debug_log
 from app.common.enums.transaction_enums import TransactionStatusesEnum
-from app.modules.balances.exceptions import BalanceAmountIsLowerError, \
-    BalanceNotFoundError
+from app.modules.balances.exceptions import BalanceAmountIsLowerError, BalanceNotFoundError
 from app.modules.balances.service.guards import BalanceGuards
-from app.modules.operations.contracts.dtos import DepositDraftDTO, WithdrawDraftDTO, TransferDraftDTO, ExchangeDraftDTO
+from app.modules.operations.contracts.dtos import DepositDraftDTO, TransferDraftDTO, WithdrawDraftDTO
 from app.modules.wallets.service.guards import WalletGuards
 
 if TYPE_CHECKING:
-    from app.database.models import WalletModel, TransactionModel, BalanceModel
+    from app.database.models import BalanceModel, TransactionModel, WalletModel
     from app.modules.balances.repository.commands import BalanceCommandsRepository
     from app.modules.balances.repository.queries import BalanceQueriesRepository
     from app.modules.transactions.service.use_cases import CreateTrnService, UpdateTrnService
@@ -20,9 +19,14 @@ if TYPE_CHECKING:
 class DepositBalanceService:
     """Сервис по пополнению баланса"""
 
-    def __init__(self, wallet_queries: 'WalletQueriesRepository', balance_commands: 'BalanceCommandsRepository',
-                 balance_queries: 'BalanceQueriesRepository', create_service: 'CreateTrnService',
-                 update_service: 'UpdateTrnService') -> None:
+    def __init__(
+        self,
+        wallet_queries: 'WalletQueriesRepository',
+        balance_commands: 'BalanceCommandsRepository',
+        balance_queries: 'BalanceQueriesRepository',
+        create_service: 'CreateTrnService',
+        update_service: 'UpdateTrnService',
+    ) -> None:
         self._wallet_queries = wallet_queries
         self._balance_commands = balance_commands
         self._balance_queries = balance_queries
@@ -33,7 +37,7 @@ class DepositBalanceService:
     async def deposit_balance(self, address: str, pin: str, amount: Decimal, currency: str) -> 'DepositDraftDTO':
         fee = Decimal('1')
 
-        wallet: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
+        wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
         WalletGuards.require_wallet_exists(wallet)
         WalletGuards.require_verify_pin(pin, wallet.pin_hash)
         WalletGuards.require_wallet_not_blocked(wallet)
@@ -67,9 +71,14 @@ class DepositBalanceService:
 class TransferBalanceService:
     """Сервис по переводу денег"""
 
-    def __init__(self, wallet_queries: 'WalletQueriesRepository', balance_commands: 'BalanceCommandsRepository',
-                 balance_queries: 'BalanceQueriesRepository', create_service: 'CreateTrnService',
-                 update_service: 'UpdateTrnService') -> None:
+    def __init__(
+        self,
+        wallet_queries: 'WalletQueriesRepository',
+        balance_commands: 'BalanceCommandsRepository',
+        balance_queries: 'BalanceQueriesRepository',
+        create_service: 'CreateTrnService',
+        update_service: 'UpdateTrnService',
+    ) -> None:
         self._wallet_queries = wallet_queries
         self._balance_commands = balance_commands
         self._balance_queries = balance_queries
@@ -80,19 +89,18 @@ class TransferBalanceService:
     async def transfer_balance(self, from_address: str, pin: str, amount: Decimal, currency: str, to_address: str) -> 'TransferDraftDTO':
         fee = Decimal('1')
 
-        wallet: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(from_address)
+        wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(from_address)
         WalletGuards.require_wallet_exists(wallet)
         WalletGuards.require_verify_pin(pin, wallet.pin_hash)
         WalletGuards.require_wallet_not_blocked(wallet)
 
-        to_wallet: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(to_address)
+        to_wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(to_address)
         WalletGuards.require_wallet_exists(to_wallet)
         WalletGuards.require_wallet_not_blocked(to_wallet)
 
-        balances: list['BalanceModel'] = await self._balance_queries.select_balances_by_wallet_id(wallet.wallet_id)
+        balances: list[BalanceModel] = await self._balance_queries.select_balances_by_wallet_id(wallet.wallet_id)
 
-        to_balances: list['BalanceModel'] = await self._balance_queries.select_balances_by_wallet_id(
-            to_wallet.wallet_id)
+        to_balances: list[BalanceModel] = await self._balance_queries.select_balances_by_wallet_id(to_wallet.wallet_id)
 
         for balance in balances:
             if balance.currency == currency:
@@ -102,31 +110,26 @@ class TransferBalanceService:
                     if to_balance.currency == currency:
                         BalanceGuards.require_balance_not_frozen(to_balance)
 
-                        trn: 'TransactionModel' = await self._create_service.create_transfer_trn(from_address,
-                                                                                                 to_address, amount,
-                                                                                                 fee, currency)
+                        trn: TransactionModel = await self._create_service.create_transfer_trn(from_address, to_address, amount, fee, currency)
                         self._update_service.update_trn_status(trn.transaction_id, TransactionStatusesEnum.PENDING)
 
                         try:
                             if not balance.amount >= amount * fee:
-                                raise BalanceAmountIsLowerError(f'Balance amount lower than {amount*fee}')
+                                raise BalanceAmountIsLowerError(f'Balance amount lower than {amount * fee}')
 
                             balance.amount -= amount
                             await self._balance_commands.partial_update_balance(balance, {'amount': balance.amount})
 
                             to_balance.amount += amount * fee
-                            await self._balance_commands.partial_update_balance(to_balance,
-                                                                                {'amount': to_balance.amount})
+                            await self._balance_commands.partial_update_balance(to_balance, {'amount': to_balance.amount})
 
-                            await self._update_service.update_trn_status(trn.transaction_id,
-                                                                         TransactionStatusesEnum.SUCCESS)
+                            await self._update_service.update_trn_status(trn.transaction_id, TransactionStatusesEnum.SUCCESS)
                             await self._update_service.add_trn_complete_at(trn.transaction_id)
 
                             return TransferDraftDTO.model_validate(trn)
 
                         except Exception:
-                            await self._update_service.update_trn_status(trn.transaction_id,
-                                                                         TransactionStatusesEnum.FAILED)
+                            await self._update_service.update_trn_status(trn.transaction_id, TransactionStatusesEnum.FAILED)
                             await self._update_service.add_trn_complete_at(trn.transaction_id)
                             raise
 
@@ -136,9 +139,14 @@ class TransferBalanceService:
 class WithdrawBalanceService:
     """Сервис по снятию денег с баланса"""
 
-    def __init__(self, wallet_queries: 'WalletQueriesRepository', balance_commands: 'BalanceCommandsRepository',
-                 balance_queries: 'BalanceQueriesRepository', create_service: 'CreateTrnService',
-                 update_service: 'UpdateTrnService') -> None:
+    def __init__(
+        self,
+        wallet_queries: 'WalletQueriesRepository',
+        balance_commands: 'BalanceCommandsRepository',
+        balance_queries: 'BalanceQueriesRepository',
+        create_service: 'CreateTrnService',
+        update_service: 'UpdateTrnService',
+    ) -> None:
         self._wallet_queries = wallet_queries
         self._balance_commands = balance_commands
         self._balance_queries = balance_queries
@@ -149,7 +157,7 @@ class WithdrawBalanceService:
     async def withdraw_balance(self, address: str, pin: str, amount: Decimal, currency: str) -> 'WithdrawDraftDTO':
         fee = Decimal('1')
 
-        wallet: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
+        wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
         WalletGuards.require_wallet_exists(wallet)
         WalletGuards.require_verify_pin(pin, wallet.pin_hash)
         WalletGuards.require_wallet_not_blocked(wallet)
@@ -164,8 +172,8 @@ class WithdrawBalanceService:
                 await self._update_service.update_trn_status(trn.transaction_id, TransactionStatusesEnum.PENDING)
 
                 try:
-                    if not balance.amount >= amount*fee:
-                        raise BalanceAmountIsLowerError(f'Balance amount lower than {amount*fee}')
+                    if not balance.amount >= amount * fee:
+                        raise BalanceAmountIsLowerError(f'Balance amount lower than {amount * fee}')
 
                     balance.amount -= amount * fee
                     await self._balance_commands.partial_update_balance(balance, {'amount': balance.amount})
@@ -186,9 +194,14 @@ class WithdrawBalanceService:
 class ExchangeBalanceService:
     """Сервис по обмену валют на или между балансами"""
 
-    def __init__(self, wallet_queries: 'WalletQueriesRepository', balance_commands: 'BalanceCommandsRepository',
-                 balance_queries: 'BalanceQueriesRepository', create_service: 'CreateTrnService',
-                 update_service: 'UpdateTrnService') -> None:
+    def __init__(
+        self,
+        wallet_queries: 'WalletQueriesRepository',
+        balance_commands: 'BalanceCommandsRepository',
+        balance_queries: 'BalanceQueriesRepository',
+        create_service: 'CreateTrnService',
+        update_service: 'UpdateTrnService',
+    ) -> None:
         self._wallet_queries = wallet_queries
         self._balance_commands = balance_commands
         self._balance_queries = balance_queries

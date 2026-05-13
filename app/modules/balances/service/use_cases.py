@@ -1,23 +1,23 @@
 from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import UUID
+
 from loguru import logger
+from sqlalchemy.exc import IntegrityError
 
 from app.common.decorators import debug_log
 from app.common.enums.balance_enums import BalanceTypesEnum
-from app.modules.balances.contracts.dtos import FullBalanceInfoDTO
-from app.modules.balances.contracts.dtos import SecurityBalanceInfoDTO
-from app.modules.balances.exceptions import BalanceAmountIsNotZeroError, BalanceCurrencyNotFoundError
+from app.modules.balances.contracts.dtos import FullBalanceInfoDTO, SecurityBalanceInfoDTO
+from app.modules.balances.exceptions import BalanceAmountIsNotZeroError, BalanceCurrencyNotFoundError, CreateBalanceError
 from app.modules.balances.service.guards import BalanceGuards
 from app.modules.users.service.guards import UserGuards
 from app.modules.wallets.service.guards import WalletGuards
 
 if TYPE_CHECKING:
-    from app.database.models import UserModel
-    from app.database.models import WalletModel
-    from app.modules.wallets.repository.queries import WalletQueriesRepository
+    from app.database.models import UserModel, WalletModel
     from app.modules.balances.repository.commands import BalanceCommandsRepository
     from app.modules.balances.repository.queries import BalanceQueriesRepository
+    from app.modules.wallets.repository.queries import WalletQueriesRepository
 
 
 class CreateBalanceService:
@@ -31,13 +31,16 @@ class CreateBalanceService:
     async def _create_balance(self, current_user: 'UserModel', address: str, pin: str, currency: str, amount: Decimal, balance_type: BalanceTypesEnum) -> 'SecurityBalanceInfoDTO':
         UserGuards.require_user_exists(current_user)
 
-        obj: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
+        obj: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
 
         WalletGuards.require_wallet_exists(obj)
         WalletGuards.require_verify_pin(pin, obj.pin_hash)
         WalletGuards.require_wallet_not_blocked(obj)
 
-        balance = await self._balance_commands.insert_balance_info(currency, amount, balance_type, obj.wallet_id)
+        try:
+            balance = await self._balance_commands.insert_balance_info(currency, amount, balance_type, obj.wallet_id)
+        except IntegrityError as err:
+            raise CreateBalanceError('Create balance error') from err
 
         balance_count: int = await self._balance_queries.select_balances_count(balance.wallet_id)
         BalanceGuards.require_balance_limit(balance_count)
@@ -112,7 +115,7 @@ class DeleteBalanceService:
     async def close_balance(self, current_user: 'UserModel', address: str, pin: str, currency: str) -> None:
         UserGuards.require_user_exists(current_user)
 
-        wallet: 'WalletModel' = await self._wallet_queries.select_wallet_by_address(address)
+        wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
         WalletGuards.require_verify_pin(pin, wallet.pin_hash)
         WalletGuards.require_wallet_not_blocked(wallet)
 

@@ -1,4 +1,5 @@
 from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict
 
 from app.common.enums.wallet_enums import WalletTypesEnum

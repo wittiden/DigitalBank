@@ -6,6 +6,11 @@ class BalanceRouterError(RouterError):
     detail = 'Balance router error'
 
 
+class CreateBalanceError(BalanceRouterError):
+    status_code = 400
+    detail = 'Create balance error'
+
+
 class InvalidFieldError(BalanceRouterError):
     status_code = 400
     detail = 'Invalid fild error'

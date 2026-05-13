@@ -1,10 +1,9 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class BalanceTypesEnum(str, Enum):
+class BalanceTypesEnum(StrEnum):
     """Енум для хранения типов балансов"""
 
     UNKNOWN = 'unknown'
     REGULAR = 'regular'
     FOREIGN = 'foreign'
-

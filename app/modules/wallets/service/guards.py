@@ -1,7 +1,13 @@
 from typing import TYPE_CHECKING
 
-from app.modules.wallets.exceptions import WalletIsAlreadyBlockedError, WalletIsAlreadyUnBlockedError, WalletLimitError, \
-    WalletNotFoundError, WalletPinNotVerifiedError, WalletIsBlockedError
+from app.modules.wallets.exceptions import (
+    WalletIsAlreadyBlockedError,
+    WalletIsAlreadyUnBlockedError,
+    WalletIsBlockedError,
+    WalletLimitError,
+    WalletNotFoundError,
+    WalletPinNotVerifiedError,
+)
 from app.modules.wallets.service.utils import verify_pin
 
 if TYPE_CHECKING:

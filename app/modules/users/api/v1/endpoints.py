@@ -1,13 +1,13 @@
 from uuid import UUID
+
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import CurrentUser, CurrentAdmin
-from app.unit_of_work.uow import UnitOfWork
+from app.api.v1.endpoints import CurrentAdmin, CurrentUser
 from app.modules.users.contracts.responses import FullUserInfoResponse, SecurityUserInfoResponse
 from app.modules.users.contracts.schemas import CreateUserSchema, UpdateUserSchema
-from app.modules.users.service.use_cases import CreateUserService, ShowUserService, UpdateUserService, \
-    DeleteUserService, ManageUserService
+from app.modules.users.service.use_cases import CreateUserService, DeleteUserService, ManageUserService, ShowUserService, UpdateUserService
+from app.unit_of_work.uow import UnitOfWork
 
 user_router = APIRouter(prefix='/api/v1/users', tags=['users'])
 admin_router = APIRouter(prefix='/api/v1/admin/users', tags=['admin'])
@@ -67,7 +67,9 @@ async def get_user_by_id_endpoint(current_user: CurrentAdmin, user_id: UUID, ser
 
 @admin_router.get('/', response_model=list[FullUserInfoResponse], summary='Get users')
 @inject
-async def get_users_endpoint(current_user: CurrentAdmin, service: FromDishka[ShowUserService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100) -> list[FullUserInfoResponse]:
+async def get_users_endpoint(
+    current_user: CurrentAdmin, service: FromDishka[ShowUserService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100
+) -> list[FullUserInfoResponse]:
     objs = await service.show_users(current_user, offset, limit)
     return objs
 

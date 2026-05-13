@@ -1,8 +1,9 @@
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Index, Enum, String, Numeric, ForeignKey
 from uuid import UUID, uuid4
+
+from sqlalchemy import Enum, ForeignKey, Index, Numeric, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums.balance_enums import BalanceTypesEnum
 from app.database.base import Base
@@ -15,9 +16,7 @@ class BalanceModel(Base):
     """Модель для хранения данных балансов в бд"""
 
     __tablename__ = 'balances'
-    __table_args__ = (
-        Index('wallet_id_index', 'wallet_id'),
-    )
+    __table_args__ = (Index('wallet_id_index', 'wallet_id'),)
 
     balance_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     currency: Mapped[str] = mapped_column(String(15), nullable=False)
@@ -29,8 +28,4 @@ class BalanceModel(Base):
     wallet: Mapped['WalletModel'] = relationship('WalletModel', back_populates='balances')
 
     def __repr__(self) -> str:
-        return (f'balance_id: {self.balance_id} -> wallet_id: {self.wallet_id},'
-                f'currency: {self.currency},'
-                f'amount: {self.amount},'
-                f'is_frozen: {self.is_frozen},'
-                f'type: {self.balance_type}')
+        return f'balance_id: {self.balance_id} -> wallet_id: {self.wallet_id},currency: {self.currency},amount: {self.amount},is_frozen: {self.is_frozen},type: {self.balance_type}'

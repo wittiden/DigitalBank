@@ -1,13 +1,15 @@
 import functools
+from collections.abc import Awaitable, Callable
+from typing import Concatenate, ParamSpec, TypeVar
+
 from loguru import logger
-from typing import Callable, TypeVar, ParamSpec, Concatenate, Awaitable
 
 T = TypeVar('T')
 Self = TypeVar('Self')
 P = ParamSpec('P')
 
 
-def debug_log(func: Callable[Concatenate[Self, P], Awaitable[T]]) -> Callable[Concatenate[Self, P], Awaitable[T]]:
+def debug_log[Self, **P, T](func: Callable[Concatenate[Self, P], Awaitable[T]]) -> Callable[Concatenate[Self, P], Awaitable[T]]:
     @functools.wraps(func)
     async def wrapped(self: Self, *args: P.args, **kwargs: P.kwargs) -> T:
 
@@ -18,4 +20,5 @@ def debug_log(func: Callable[Concatenate[Self, P], Awaitable[T]]) -> Callable[Co
         logger.debug('End - {}', func.__name__)
 
         return result
+
     return wrapped
