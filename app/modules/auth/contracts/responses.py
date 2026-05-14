@@ -1,8 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class TokenInfoResponse(BaseModel):
     """Схема для ответа с информацией о токене"""
 
-    token: str
+    access_token: str
     token_type: str
+
+    model_config = ConfigDict(from_attributes=True)

@@ -2,6 +2,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums.balance_enums import BalanceTypesEnum
@@ -19,9 +20,14 @@ class BalanceCommandsRepository:
         obj = BalanceModel(currency=currency, amount=amount, balance_type=balance_type, wallet_id=wallet_id)
 
         self._async_session.add(obj)
-        await self._async_session.flush()
 
-        return obj
+        try:
+            await self._async_session.flush()
+            return obj
+
+        except IntegrityError:
+            await self._async_session.rollback()
+            raise
 
     async def partial_update_balance(self, balance: 'BalanceModel', data: dict[str, Any]) -> 'BalanceModel':
         for key, value in data.items():
@@ -30,9 +36,13 @@ class BalanceCommandsRepository:
 
             setattr(balance, key, value)
 
-        await self._async_session.flush()
+        try:
+            await self._async_session.flush()
+            return balance
 
-        return balance
+        except IntegrityError:
+            await self._async_session.rollback()
+            raise
 
     async def delete_balance(self, balance: 'BalanceModel') -> None:
         await self._async_session.delete(balance)

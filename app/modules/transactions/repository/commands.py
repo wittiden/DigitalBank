@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums.transaction_enums import TransactionStatusesEnum, TransactionTypesEnum
@@ -43,9 +44,14 @@ class TrnCommandsRepository:
         )
 
         self._async_session.add(trn)
-        await self._async_session.flush()
 
-        return trn
+        try:
+            await self._async_session.flush()
+            return trn
+
+        except IntegrityError:
+            await self._async_session.rollback()
+            raise
 
     async def partial_update_trn(self, trn: 'TransactionModel', data: dict[str, Any]) -> 'TransactionModel':
         for key, value in data.items():
@@ -54,6 +60,10 @@ class TrnCommandsRepository:
 
             setattr(trn, key, value)
 
-        await self._async_session.flush()
+        try:
+            await self._async_session.flush()
+            return trn
 
-        return trn
+        except IntegrityError:
+            await self._async_session.rollback()
+            raise

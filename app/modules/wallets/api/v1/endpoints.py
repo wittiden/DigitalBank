@@ -34,9 +34,9 @@ async def create_debit_wallet_endpoint(
 @user_wallet_router.patch('/', response_model=SecurityWalletInfoResponse, summary='Update wallet')
 @inject
 async def update_my_wallet_endpoint(
-    current_user: CurrentUser, schema: UpdateWalletSchema, params_schema: UpdateParamsWalletSchema, service: FromDishka[UpdateWalletService], uow: FromDishka[UnitOfWork]
+    current_user: CurrentUser, creds_schema: UpdateWalletSchema, params_schema: UpdateParamsWalletSchema, service: FromDishka[UpdateWalletService], uow: FromDishka[UnitOfWork]
 ) -> SecurityWalletInfoResponse:
-    dto = await service.partial_update_my_wallet(current_user, schema.address, schema.pin, params_schema.model_dump(exclude_none=True))
+    dto = await service.partial_update_my_wallet(current_user, creds_schema.address, creds_schema.pin, params_schema.model_dump(exclude_none=True))
     return SecurityWalletInfoResponse.model_validate(dto)
 
 

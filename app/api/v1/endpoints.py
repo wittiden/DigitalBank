@@ -2,27 +2,23 @@ from typing import Annotated
 
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import OAuth2PasswordBearer
 
 from app.database.models import UserModel
 from app.modules.auth.service.use_cases import ShowCurrentUserService
 
 health_router = APIRouter(prefix='/api/v1', tags=['health'])
 
-security = HTTPBearer()
-
-
-def get_token(creds: HTTPAuthorizationCredentials = Depends(security)) -> str:
-    return creds.credentials
+security = OAuth2PasswordBearer(tokenUrl='/api/v1/auth/login')
 
 
 @inject
-async def current_user(service: FromDishka[ShowCurrentUserService], token: str = Depends(get_token)) -> 'UserModel':
+async def current_user(service: FromDishka[ShowCurrentUserService], token: str = Depends(security)) -> 'UserModel':
     return await service.show_current_user(token)
 
 
 @inject
-async def current_admin(service: FromDishka[ShowCurrentUserService], token: str = Depends(get_token)) -> 'UserModel':
+async def current_admin(service: FromDishka[ShowCurrentUserService], token: str = Depends(security)) -> 'UserModel':
     return await service.show_current_admin(token)
 
 

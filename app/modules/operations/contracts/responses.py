@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class DepositDraftResponse(BaseModel):
@@ -11,6 +11,8 @@ class DepositDraftResponse(BaseModel):
     fee: Decimal
     from_currency: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class WithdrawDraftResponse(BaseModel):
     """Схема для ответа с данными чека транзакции снятия"""
@@ -19,6 +21,8 @@ class WithdrawDraftResponse(BaseModel):
     amount: Decimal
     fee: Decimal
     from_currency: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TransferDraftResponse(BaseModel):
@@ -30,6 +34,8 @@ class TransferDraftResponse(BaseModel):
     fee: Decimal
     from_currency: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ExchangeDraftResponse(BaseModel):
     """Схема для ответа с данными чека транзакции обмена"""
@@ -39,3 +45,5 @@ class ExchangeDraftResponse(BaseModel):
     amount: Decimal
     fee: Decimal
     from_currency: str
+
+    model_config = ConfigDict(from_attributes=True)

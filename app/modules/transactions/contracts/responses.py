@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.common.enums.transaction_enums import TransactionStatusesEnum, TransactionTypesEnum
 
@@ -22,3 +22,5 @@ class FullTrnInfoResponse(BaseModel):
     to_currency: str | None
     transaction_type: TransactionTypesEnum
     transaction_status: TransactionStatusesEnum
+
+    model_config = ConfigDict(from_attributes=True)

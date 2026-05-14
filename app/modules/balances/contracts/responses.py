@@ -1,7 +1,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.common.enums.balance_enums import BalanceTypesEnum
 
@@ -16,9 +16,13 @@ class FullBalanceInfoResponse(BaseModel):
     balance_type: BalanceTypesEnum
     wallet_id: UUID
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class SecurityBalanceInfoResponse(BaseModel):
     """Схема для ответа с безопасными данными баланса"""
 
     currency: str
     amount: Decimal
+
+    model_config = ConfigDict(from_attributes=True)

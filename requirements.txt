@@ -11,6 +11,7 @@ dishka~=1.10.1
 #auth
 pyjwt[crypto]~=2.12.1
 bcrypt~=5.0.0
+python-multipart~=0.0.28
 
 #validation
 pydantic[email]~=2.13.3
@@ -22,4 +23,4 @@ loguru~=0.7.3
 #pipeline
 pre-commit~=4.6.0
 pyright~=1.1.409
-ruff~=0.15.12
+ruff~=0.15.13

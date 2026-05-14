@@ -1,6 +1,7 @@
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums.wallet_enums import WalletTypesEnum
@@ -18,9 +19,14 @@ class WalletCommandsRepository:
         obj = WalletModel(pin_hash=pin_hash, wallet_type=wallet_type, user_id=user_id)
 
         self._async_session.add(obj)
-        await self._async_session.flush()
 
-        return obj
+        try:
+            await self._async_session.flush()
+            return obj
+
+        except IntegrityError:
+            await self._async_session.rollback()
+            raise
 
     async def partial_update_wallet(self, wallet: 'WalletModel', data: dict[str, Any]) -> 'WalletModel':
         for key, value in data.items():
@@ -29,9 +35,13 @@ class WalletCommandsRepository:
 
             setattr(wallet, key, value)
 
-        await self._async_session.flush()
+        try:
+            await self._async_session.flush()
+            return wallet
 
-        return wallet
+        except IntegrityError:
+            await self._async_session.rollback()
+            raise
 
     async def delete_wallet(self, wallet: 'WalletModel') -> None:
         await self._async_session.delete(wallet)

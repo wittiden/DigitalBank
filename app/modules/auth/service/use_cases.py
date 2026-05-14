@@ -60,7 +60,7 @@ class AuthService:
         token = self._manage_service.encode_jwt({'sub': str(obj.user_id), 'role': obj.user_status.value})
 
         logger.info(f'Вы вошли в аккаунт #{obj.user_id}')
-        return TokenInfoDTO(token=token)
+        return TokenInfoDTO(access_token=token)
 
 
 class ShowCurrentUserService:
