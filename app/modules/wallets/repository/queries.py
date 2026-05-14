@@ -26,6 +26,6 @@ class WalletQueriesRepository:
     async def select_wallet_by_address(self, address: str) -> 'WalletModel | None':
         return (await self._async_session.execute(select(WalletModel).where(WalletModel.address == address))).scalar_one_or_none()
 
-    async def select_wallets_count_by_user_id(self, user_id: UUID) -> int:
+    async def select_wallets_count_by_user_id(self, user_id: UUID) -> int | None:
         obj = await self._async_session.execute(select(func.count(WalletModel.wallet_id)).where(WalletModel.user_id == user_id))
         return obj.scalar()

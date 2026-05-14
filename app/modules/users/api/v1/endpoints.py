@@ -16,22 +16,22 @@ admin_router = APIRouter(prefix='/api/v1/admin/users', tags=['admin'])
 @user_router.post('/', response_model=SecurityUserInfoResponse, summary='Create user')
 @inject
 async def create_user_endpoint(schema: CreateUserSchema, service: FromDishka[CreateUserService], uow: FromDishka[UnitOfWork]) -> SecurityUserInfoResponse:
-    user = await service.create_user(schema.name, schema.email, schema.password)
-    return user
+    dto = await service.create_user(schema.name, schema.email, schema.password)
+    return SecurityUserInfoResponse.model_validate(dto)
 
 
 @admin_router.post('/', response_model=SecurityUserInfoResponse, summary='Create admin')
 @inject
 async def create_admin_endpoint(schema: CreateUserSchema, service: FromDishka[CreateUserService], uow: FromDishka[UnitOfWork]) -> SecurityUserInfoResponse:
-    admin = await service.create_admin(schema.name, schema.email, schema.password)
-    return admin
+    dto = await service.create_admin(schema.name, schema.email, schema.password)
+    return SecurityUserInfoResponse.model_validate(dto)
 
 
 @user_router.patch('/me', response_model=SecurityUserInfoResponse, summary='Update me')
 @inject
 async def update_me_endpoint(current_user: CurrentUser, schema: UpdateUserSchema, service: FromDishka[UpdateUserService], uow: FromDishka[UnitOfWork]) -> SecurityUserInfoResponse:
-    obj = await service.partial_update_my_user(current_user, schema.model_dump(exclude_none=True))
-    return obj
+    dto = await service.partial_update_my_user(current_user, schema.model_dump(exclude_none=True))
+    return SecurityUserInfoResponse.model_validate(dto)
 
 
 @admin_router.delete('/{user_id}', summary='Delete user')
@@ -61,8 +61,8 @@ async def unblock_user_endpoint(current_user: CurrentAdmin, user_id: UUID, servi
 @admin_router.get('/{user_id}', response_model=FullUserInfoResponse, summary='Get user by id')
 @inject
 async def get_user_by_id_endpoint(current_user: CurrentAdmin, user_id: UUID, service: FromDishka[ShowUserService], uow: FromDishka[UnitOfWork]) -> FullUserInfoResponse:
-    obj = await service.show_user_by_id(current_user, user_id)
-    return obj
+    dto = await service.show_user_by_id(current_user, user_id)
+    return FullUserInfoResponse.model_validate(dto)
 
 
 @admin_router.get('/', response_model=list[FullUserInfoResponse], summary='Get users')
@@ -70,12 +70,12 @@ async def get_user_by_id_endpoint(current_user: CurrentAdmin, user_id: UUID, ser
 async def get_users_endpoint(
     current_user: CurrentAdmin, service: FromDishka[ShowUserService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100
 ) -> list[FullUserInfoResponse]:
-    objs = await service.show_users(current_user, offset, limit)
-    return objs
+    dtos = await service.show_users(current_user, offset, limit)
+    return [FullUserInfoResponse.model_validate(dto) for dto in dtos]
 
 
 @user_router.get('/me', response_model=SecurityUserInfoResponse, summary='Get me')
 @inject
 async def get_my_user_endpoint(current_user: CurrentUser, service: FromDishka[ShowUserService], uow: FromDishka[UnitOfWork]) -> SecurityUserInfoResponse:
-    obj = await service.show_my_user(current_user)
-    return obj
+    dto = await service.show_my_user(current_user)
+    return SecurityUserInfoResponse.model_validate(dto)

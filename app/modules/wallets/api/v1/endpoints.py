@@ -18,7 +18,8 @@ admin_wallet_router = APIRouter(prefix='/api/v1/admin/wallets', tags=['wallets']
 async def create_credit_wallet_endpoint(
     current_user: CurrentUser, schema: CreateWalletSchema, service: FromDishka[CreateWalletService], uow: FromDishka[UnitOfWork]
 ) -> SecurityWalletInfoResponse:
-    return await service.create_credit_wallet(current_user, schema.pin)
+    dto = await service.create_credit_wallet(current_user, schema.pin)
+    return SecurityWalletInfoResponse.model_validate(dto)
 
 
 @user_wallet_router.post('/debit', response_model=SecurityWalletInfoResponse, summary='Create debit wallet')
@@ -26,7 +27,8 @@ async def create_credit_wallet_endpoint(
 async def create_debit_wallet_endpoint(
     current_user: CurrentUser, schema: CreateWalletSchema, service: FromDishka[CreateWalletService], uow: FromDishka[UnitOfWork]
 ) -> SecurityWalletInfoResponse:
-    return await service.create_debit_wallet(current_user, schema.pin)
+    dto = await service.create_debit_wallet(current_user, schema.pin)
+    return SecurityWalletInfoResponse.model_validate(dto)
 
 
 @user_wallet_router.patch('/', response_model=SecurityWalletInfoResponse, summary='Update wallet')
@@ -34,7 +36,8 @@ async def create_debit_wallet_endpoint(
 async def update_my_wallet_endpoint(
     current_user: CurrentUser, schema: UpdateWalletSchema, params_schema: UpdateParamsWalletSchema, service: FromDishka[UpdateWalletService], uow: FromDishka[UnitOfWork]
 ) -> SecurityWalletInfoResponse:
-    return await service.partial_update_my_wallet(current_user, schema.address, schema.pin, params_schema.model_dump(exclude_none=True))
+    dto = await service.partial_update_my_wallet(current_user, schema.address, schema.pin, params_schema.model_dump(exclude_none=True))
+    return SecurityWalletInfoResponse.model_validate(dto)
 
 
 @admin_wallet_router.delete('/{wallet_id}', summary='Delete wallet')
@@ -64,7 +67,8 @@ async def unblock_wallet_endpoint(current_user: CurrentAdmin, wallet_id: UUID, s
 @admin_wallet_router.get('/{wallet_id}', response_model=FullWalletInfoResponse, summary='Get wallet by id')
 @inject
 async def get_wallet_by_id_endpoint(current_user: CurrentAdmin, wallet_id: UUID, service: FromDishka[ShowWalletService], uow: FromDishka[UnitOfWork]) -> FullWalletInfoResponse:
-    return await service.show_wallet_by_id(current_user, wallet_id)
+    dto = await service.show_wallet_by_id(current_user, wallet_id)
+    return FullWalletInfoResponse.model_validate(dto)
 
 
 @admin_wallet_router.get('/by_user_id/{user_id}', response_model=list[FullWalletInfoResponse], summary='Get wallets by user id')
@@ -72,7 +76,8 @@ async def get_wallet_by_id_endpoint(current_user: CurrentAdmin, wallet_id: UUID,
 async def get_wallets_by_user_id_endpoint(
     current_user: CurrentAdmin, user_id: UUID, service: FromDishka[ShowWalletService], uow: FromDishka[UnitOfWork]
 ) -> list[FullWalletInfoResponse]:
-    return await service.show_wallets_by_user_id(current_user, user_id)
+    dtos = await service.show_wallets_by_user_id(current_user, user_id)
+    return [FullWalletInfoResponse.model_validate(dto) for dto in dtos]
 
 
 @admin_wallet_router.get('/', response_model=list[FullWalletInfoResponse], summary='Get wallets')
@@ -80,10 +85,12 @@ async def get_wallets_by_user_id_endpoint(
 async def get_wallets_endpoint(
     current_user: CurrentAdmin, service: FromDishka[ShowWalletService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100
 ) -> list[FullWalletInfoResponse]:
-    return await service.show_wallets(current_user, offset, limit)
+    dtos = await service.show_wallets(current_user, offset, limit)
+    return [FullWalletInfoResponse.model_validate(dto) for dto in dtos]
 
 
 @user_wallet_router.get('/me', response_model=list[SecurityWalletInfoResponse], summary='Get my wallets')
 @inject
 async def get_my_wallets_endpoint(current_user: CurrentUser, service: FromDishka[ShowWalletService], uow: FromDishka[UnitOfWork]) -> list[SecurityWalletInfoResponse]:
-    return await service.show_my_wallets(current_user)
+    dtos = await service.show_my_wallets(current_user)
+    return [SecurityWalletInfoResponse.model_validate(dto) for dto in dtos]

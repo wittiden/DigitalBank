@@ -1,18 +1,23 @@
-from typing import TYPE_CHECKING
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-if TYPE_CHECKING:
-    from app.common.exceptions.exceptions import RouterError
+from app.common.exceptions.exceptions import RouterError
 
 
-async def app_exception_handler(request: Request, exc: 'RouterError') -> JSONResponse:
+async def app_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    if isinstance(exc, RouterError):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                'error': exc.__class__.__name__,
+                'detail': exc.detail,
+                'path': str(request.url),
+            },
+        )
+
     return JSONResponse(
-        status_code=exc.status_code,
+        status_code=500,
         content={
-            'error': exc.__class__.__name__,
-            'detail': exc.detail,
-            'path': str(request.url),
-        },
+            'error': 'Internal server error'
+        }
     )

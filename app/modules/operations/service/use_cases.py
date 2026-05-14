@@ -37,8 +37,8 @@ class DepositBalanceService:
     async def deposit_balance(self, address: str, pin: str, amount: Decimal, currency: str) -> 'DepositDraftDTO':
         fee = Decimal('1')
 
-        wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
-        WalletGuards.require_wallet_exists(wallet)
+        wallet = await self._wallet_queries.select_wallet_by_address(address)
+        wallet = WalletGuards.require_wallet_exists(wallet)
         WalletGuards.require_verify_pin(pin, wallet.pin_hash)
         WalletGuards.require_wallet_not_blocked(wallet)
 
@@ -89,13 +89,13 @@ class TransferBalanceService:
     async def transfer_balance(self, from_address: str, pin: str, amount: Decimal, currency: str, to_address: str) -> 'TransferDraftDTO':
         fee = Decimal('1')
 
-        wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(from_address)
-        WalletGuards.require_wallet_exists(wallet)
+        wallet = await self._wallet_queries.select_wallet_by_address(from_address)
+        wallet = WalletGuards.require_wallet_exists(wallet)
         WalletGuards.require_verify_pin(pin, wallet.pin_hash)
         WalletGuards.require_wallet_not_blocked(wallet)
 
-        to_wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(to_address)
-        WalletGuards.require_wallet_exists(to_wallet)
+        to_wallet = await self._wallet_queries.select_wallet_by_address(to_address)
+        to_wallet = WalletGuards.require_wallet_exists(to_wallet)
         WalletGuards.require_wallet_not_blocked(to_wallet)
 
         balances: list[BalanceModel] = await self._balance_queries.select_balances_by_wallet_id(wallet.wallet_id)
@@ -157,8 +157,8 @@ class WithdrawBalanceService:
     async def withdraw_balance(self, address: str, pin: str, amount: Decimal, currency: str) -> 'WithdrawDraftDTO':
         fee = Decimal('1')
 
-        wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
-        WalletGuards.require_wallet_exists(wallet)
+        wallet = await self._wallet_queries.select_wallet_by_address(address)
+        wallet = WalletGuards.require_wallet_exists(wallet)
         WalletGuards.require_verify_pin(pin, wallet.pin_hash)
         WalletGuards.require_wallet_not_blocked(wallet)
 

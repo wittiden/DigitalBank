@@ -14,7 +14,8 @@ admin_trn_router = APIRouter(prefix='/api/v1/admin/transactions', tags=['transac
 @admin_trn_router.get('/{transaction_id}', response_model=FullTrnInfoResponse, summary='Get transaction by id')
 @inject
 async def get_trn_by_id_endpoint(current_user: CurrentAdmin, transaction_id: UUID, service: FromDishka[ShowTrnService], uow: FromDishka[UnitOfWork]) -> FullTrnInfoResponse:
-    return await service.show_trn_by_id(current_user, transaction_id)
+    dto = await service.show_trn_by_id(current_user, transaction_id)
+    return FullTrnInfoResponse.model_validate(dto)
 
 
 @admin_trn_router.get('/', response_model=list[FullTrnInfoResponse], summary='Get all transactions')
@@ -22,4 +23,5 @@ async def get_trn_by_id_endpoint(current_user: CurrentAdmin, transaction_id: UUI
 async def get_transactions_endpoint(
     current_user: CurrentAdmin, service: FromDishka[ShowTrnService], uow: FromDishka[UnitOfWork], offset: int = 0, limit: int = 100
 ) -> list[FullTrnInfoResponse]:
-    return await service.show_trns(current_user, offset, limit)
+    dtos = await service.show_trns(current_user, offset, limit)
+    return [FullTrnInfoResponse.model_validate(dto) for dto in dtos]

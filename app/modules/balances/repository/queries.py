@@ -23,6 +23,6 @@ class BalanceQueriesRepository:
         objs = await self._async_session.execute(select(BalanceModel).where(BalanceModel.wallet_id == wallet_id))
         return list(objs.scalars().all())
 
-    async def select_balances_count(self, wallet_id: UUID) -> int:
+    async def select_balances_count(self, wallet_id: UUID) -> int | None:
         objs = await self._async_session.execute(select(func.count(BalanceModel.balance_id)).where(BalanceModel.wallet_id == wallet_id))
         return objs.scalar()

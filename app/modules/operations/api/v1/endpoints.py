@@ -12,16 +12,19 @@ operation_router = APIRouter(prefix='/api/v1/operations', tags=['operations'])
 @operation_router.post('/deposit', response_model=DepositDraftResponse, summary='Deposit balance')
 @inject
 async def deposit_balance(schema: DepositSchema, service: FromDishka[DepositBalanceService], uow: FromDishka[UnitOfWork]) -> DepositDraftResponse:
-    return await service.deposit_balance(schema.address, schema.pin, schema.amount, schema.currency)
+    dto = await service.deposit_balance(schema.address, schema.pin, schema.amount, schema.currency)
+    return DepositDraftResponse.model_validate(dto)
 
 
 @operation_router.post('/transfer', response_model=TransferDraftResponse, summary='Transfer balance')
 @inject
 async def transfer_balance(schema: TransferSchema, service: FromDishka[TransferBalanceService], uow: FromDishka[UnitOfWork]) -> TransferDraftResponse:
-    return await service.transfer_balance(schema.from_address, schema.pin, schema.amount, schema.currency, schema.to_address)
+    dto = await service.transfer_balance(schema.from_address, schema.pin, schema.amount, schema.currency, schema.to_address)
+    return TransferDraftResponse.model_validate(dto)
 
 
 @operation_router.post('/withdraw', response_model=WithdrawDraftResponse, summary='Withdraw balance')
 @inject
 async def withdraw_balance(schema: WithdrawSchema, service: FromDishka[WithdrawBalanceService], uow: FromDishka[UnitOfWork]) -> WithdrawDraftResponse:
-    return await service.withdraw_balance(schema.address, schema.pin, schema.amount, schema.currency)
+    dto = await service.withdraw_balance(schema.address, schema.pin, schema.amount, schema.currency)
+    return WithdrawDraftResponse.model_validate(dto)

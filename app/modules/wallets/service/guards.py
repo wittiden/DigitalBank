@@ -18,29 +18,36 @@ class WalletGuards:
     """Класс для хранения бизнес правил кошельков"""
 
     @staticmethod
-    def require_wallet_exists(obj: 'WalletModel') -> None:
+    def require_wallet_exists(obj: WalletModel | None) -> WalletModel:
         if not obj:
             raise WalletNotFoundError('Wallet not found')
 
+        return obj
+
     @staticmethod
-    def require_wallet_not_blocked(obj: 'WalletModel') -> None:
+    def require_wallet_not_blocked(obj: WalletModel) -> None:
         if obj.is_blocked:
             raise WalletIsBlockedError('Wallet is blocked')
 
     @staticmethod
-    def require_wallet_not_already_blocked(obj: 'WalletModel') -> None:
+    def require_wallet_not_already_blocked(obj: WalletModel) -> None:
         if obj.is_blocked:
             raise WalletIsAlreadyBlockedError('Wallet is already blocked')
 
     @staticmethod
-    def require_wallet_not_already_unblocked(obj: 'WalletModel') -> None:
+    def require_wallet_not_already_unblocked(obj: WalletModel) -> None:
         if not obj.is_blocked:
             raise WalletIsAlreadyUnBlockedError('Wallet is already unblocked')
 
     @staticmethod
-    def require_wallet_limit(wallets_count: int) -> None:
+    def require_wallet_limit(wallets_count: int | None) -> int:
+        if wallets_count is None:
+            wallets_count = 0
+
         if wallets_count >= 6:
             raise WalletLimitError('Wallet limit error (max limit = 5)')
+
+        return wallets_count
 
     @staticmethod
     def require_verify_pin(pin: str, pin_hash: str) -> None:

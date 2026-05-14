@@ -57,7 +57,7 @@ class DeleteUserService:
 
         obj = await self._user_queries.select_user_by_id(user_id)
 
-        UserGuards.require_user_exists(obj)
+        obj = UserGuards.require_user_exists(obj)
 
         await self._user_commands.delete_user(obj)
 
@@ -143,9 +143,9 @@ class ManageUserService:
     async def block_user(self, current_user: 'UserModel', user_id: UUID) -> None:
         UserGuards.require_admin(current_user)
 
-        obj: UserModel = await self._user_queries.select_user_by_id(user_id)
+        obj = await self._user_queries.select_user_by_id(user_id)
 
-        UserGuards.require_user_exists(obj)
+        obj = UserGuards.require_user_exists(obj)
         UserGuards.require_user_not_already_blocked(obj)
 
         await self._user_commands.partial_update_user(obj, {'is_blocked': True})
@@ -156,9 +156,9 @@ class ManageUserService:
     async def unblock_user(self, current_user: 'UserModel', user_id: UUID) -> None:
         UserGuards.require_admin(current_user)
 
-        obj: UserModel = await self._user_queries.select_user_by_id(user_id)
+        obj = await self._user_queries.select_user_by_id(user_id)
 
-        UserGuards.require_user_exists(obj)
+        obj = UserGuards.require_user_exists(obj)
         UserGuards.require_user_not_already_unblocked(obj)
 
         await self._user_commands.partial_update_user(obj, {'is_blocked': False})

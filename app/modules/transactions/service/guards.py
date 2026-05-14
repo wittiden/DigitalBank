@@ -10,6 +10,8 @@ class TrnGuards:
     """Класс для хранения бизнес правил транзакций"""
 
     @staticmethod
-    def require_trn_exist(obj: 'TransactionModel'):
+    def require_trn_exist(obj: TransactionModel | None) -> TransactionModel:
         if not obj:
             raise TrnNotFoundError('Transaction not found')
+
+        return obj

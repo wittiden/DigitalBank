@@ -1,0 +1,23 @@
+{
+  "include": ["app"],
+
+  "exclude": [
+    "**/__pycache__",
+    "**/.pytest_cache",
+    "**/.ruff_cache",
+    "**/.mypy_cache",
+    "**/node_modules",
+    "**/.venv",
+    "**/alembic",
+    "**/migrations"
+  ],
+
+  "venvPath": ".",
+  "venv": ".venv",
+
+  "typeCheckingMode": "standard",
+
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportCallIssue": "none"
+}

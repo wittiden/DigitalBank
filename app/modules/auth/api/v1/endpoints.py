@@ -12,6 +12,6 @@ auth_router = APIRouter(prefix='/api/v1', tags=['auth'])
 
 @auth_router.post('/auth', response_model=TokenInfoResponse, summary='Login user')
 @inject
-async def login_user_endpoint(schema: LoginUserSchema, service: FromDishka[AuthService], uow: FromDishka[UnitOfWork]) -> TokenInfoDTO:
-    token = await service.login_user(schema.email, schema.password)
-    return token
+async def login_user_endpoint(schema: LoginUserSchema, service: FromDishka[AuthService], uow: FromDishka[UnitOfWork]) -> TokenInfoResponse:
+    dto = await service.login_user(schema.email, schema.password)
+    return TokenInfoResponse.model_validate(dto)

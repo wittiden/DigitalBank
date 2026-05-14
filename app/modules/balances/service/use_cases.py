@@ -31,9 +31,9 @@ class CreateBalanceService:
     async def _create_balance(self, current_user: 'UserModel', address: str, pin: str, currency: str, amount: Decimal, balance_type: BalanceTypesEnum) -> 'SecurityBalanceInfoDTO':
         UserGuards.require_user_exists(current_user)
 
-        obj: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
+        obj = await self._wallet_queries.select_wallet_by_address(address)
 
-        WalletGuards.require_wallet_exists(obj)
+        obj = WalletGuards.require_wallet_exists(obj)
         WalletGuards.require_verify_pin(pin, obj.pin_hash)
         WalletGuards.require_wallet_not_blocked(obj)
 
@@ -42,7 +42,7 @@ class CreateBalanceService:
         except IntegrityError as err:
             raise CreateBalanceError('Create balance error') from err
 
-        balance_count: int = await self._balance_queries.select_balances_count(balance.wallet_id)
+        balance_count = await self._balance_queries.select_balances_count(balance.wallet_id)
         BalanceGuards.require_balance_limit(balance_count)
 
         logger.info(f'Баланс привязанный к адресу {address} создан')
@@ -70,7 +70,7 @@ class ManageBalanceService:
 
         obj = await self._balance_queries.select_balance_by_id(balance_id)
 
-        BalanceGuards.require_balance_exist(obj)
+        obj = BalanceGuards.require_balance_exist(obj)
         BalanceGuards.require_balance_not_frozen(obj)
 
         await self._balance_commands.partial_update_balance(obj, {'is_frozen': True})
@@ -83,7 +83,7 @@ class ManageBalanceService:
 
         obj = await self._balance_queries.select_balance_by_id(balance_id)
 
-        BalanceGuards.require_balance_exist(obj)
+        obj = BalanceGuards.require_balance_exist(obj)
         BalanceGuards.require_balance_not_unfrozen(obj)
 
         await self._balance_commands.partial_update_balance(obj, {'is_frozen': False})
@@ -105,7 +105,7 @@ class DeleteBalanceService:
 
         obj = await self._balance_queries.select_balance_by_id(balance_id)
 
-        BalanceGuards.require_balance_exist(obj)
+        obj = BalanceGuards.require_balance_exist(obj)
 
         await self._balance_commands.delete_balance(obj)
 
@@ -115,7 +115,9 @@ class DeleteBalanceService:
     async def close_balance(self, current_user: 'UserModel', address: str, pin: str, currency: str) -> None:
         UserGuards.require_user_exists(current_user)
 
-        wallet: WalletModel = await self._wallet_queries.select_wallet_by_address(address)
+        wallet = await self._wallet_queries.select_wallet_by_address(address)
+
+        wallet = WalletGuards.require_wallet_exists(wallet)
         WalletGuards.require_verify_pin(pin, wallet.pin_hash)
         WalletGuards.require_wallet_not_blocked(wallet)
 

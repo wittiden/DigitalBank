@@ -32,8 +32,8 @@ class TransactionModel(Base):
     def __repr__(self) -> str:
         return (
             f'transaction_id: {self.transaction_id},'
-            f' from_wallet_id: {self.from_wallet_id},'
-            f' to_wallet_id: {self.to_wallet_id},'
+            f' from_wallet_id: {self.from_address},'
+            f' to_wallet_id: {self.to_address},'
             f' amount: {self.amount},'
             f' fee: {self.fee},'
             f' rate: {self.rate}, '

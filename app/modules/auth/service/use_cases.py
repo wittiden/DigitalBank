@@ -51,9 +51,9 @@ class AuthService:
         self._user_queries = user_queries
 
     async def login_user(self, email: str, password: str) -> 'TokenInfoDTO':
-        obj: UserModel = await self._user_queries.select_user_by_email(email)
+        obj = await self._user_queries.select_user_by_email(email)
 
-        UserGuards.require_user_exists(obj)
+        obj = UserGuards.require_user_exists(obj)
         AuthGuards.require_verify_pass(password, obj.password_hash)
         AuthGuards.require_user_not_blocked(obj)
 
@@ -77,7 +77,7 @@ class ShowCurrentUserService:
 
         user = await self._user_queries.select_user_by_id(user_id)
 
-        UserGuards.require_user_exists(user)
+        user = UserGuards.require_user_exists(user)
 
         return user
 
@@ -88,9 +88,9 @@ class ShowCurrentUserService:
 
         user = await self._user_queries.select_user_by_id(user_id)
 
+        user = UserGuards.require_user_exists(user)
+
         if not user.user_status == UserStatusesEnum.ADMIN:
             raise ForbiddenError('Forbidden error')
-
-        UserGuards.require_user_exists(user)
 
         return user

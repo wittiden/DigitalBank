@@ -12,21 +12,23 @@ class UserGuards:
     """Класс для хранения бизнес правил пользователя"""
 
     @staticmethod
-    def require_user_exists(obj: 'UserModel') -> None:
+    def require_user_exists(obj: UserModel | None) -> UserModel:
         if not obj:
             raise UserNotFoundError('User not found error')
 
+        return obj
+
     @staticmethod
-    def require_admin(obj: 'UserModel') -> None:
+    def require_admin(obj: UserModel) -> None:
         if obj.user_status != UserStatusesEnum.ADMIN:
             raise ForbiddenError('Admin privileges required')
 
     @staticmethod
-    def require_user_not_already_blocked(obj: 'UserModel') -> None:
+    def require_user_not_already_blocked(obj: UserModel) -> None:
         if obj.is_blocked:
             raise UserIsAlreadyBlockedError('User is already blocked error')
 
     @staticmethod
-    def require_user_not_already_unblocked(obj: 'UserModel') -> None:
+    def require_user_not_already_unblocked(obj: UserModel) -> None:
         if not obj.is_blocked:
             raise UserIsAlreadyUnBlockedError('User is already unblocked error')

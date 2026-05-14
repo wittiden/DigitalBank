@@ -32,9 +32,9 @@ class CreateTrnService:
         amount: Decimal,
         fee: Decimal,
         started_at: datetime,
-        transaction_type: 'TransactionTypesEnum',
+        transaction_type: TransactionTypesEnum,
+        from_currency: str,
         rate: Decimal | None = None,
-        from_currency: str | None = None,
         to_currency: str | None = None,
     ) -> 'TransactionModel':
         try:
@@ -129,7 +129,7 @@ class UpdateTrnService:
     async def update_trn_status(self, transaction_id: UUID, new_trn_status: TransactionStatusesEnum) -> 'TransactionModel':
         obj = await self._trn_queries.select_trn_by_id(transaction_id)
 
-        TrnGuards.require_trn_exist(obj)
+        obj = TrnGuards.require_trn_exist(obj)
 
         await self._trn_commands.partial_update_trn(obj, {'transaction_status': new_trn_status})
 
@@ -144,7 +144,7 @@ class UpdateTrnService:
     async def add_trn_complete_at(self, transaction_id: UUID) -> 'TransactionModel':
         obj = await self._trn_queries.select_trn_by_id(transaction_id)
 
-        TrnGuards.require_trn_exist(obj)
+        obj = TrnGuards.require_trn_exist(obj)
 
         await self._trn_commands.partial_update_trn(obj, {'completed_at': datetime.now()})
 
