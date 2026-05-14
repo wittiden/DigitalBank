@@ -9,7 +9,7 @@ from app.modules.operations.contracts.dtos import DepositDraftDTO, TransferDraft
 from app.modules.wallets.service.guards import WalletGuards
 
 if TYPE_CHECKING:
-    from app.database.models import BalanceModel, TransactionModel, WalletModel
+    from app.database.models import BalanceModel, TransactionModel
     from app.modules.balances.repository.commands import BalanceCommandsRepository
     from app.modules.balances.repository.queries import BalanceQueriesRepository
     from app.modules.transactions.service.use_cases import CreateTrnService, UpdateTrnService

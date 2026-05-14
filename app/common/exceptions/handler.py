@@ -15,9 +15,4 @@ async def app_exception_handler(request: Request, exc: Exception) -> JSONRespons
             },
         )
 
-    return JSONResponse(
-        status_code=500,
-        content={
-            'error': 'Internal server error'
-        }
-    )
+    return JSONResponse(status_code=500, content={'error': 'Internal server error'})

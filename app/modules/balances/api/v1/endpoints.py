@@ -78,4 +78,3 @@ async def get_balances_by_wallet_id_endpoint(
 ) -> list[FullBalanceInfoResponse]:
     dtos = await service.show_balances_by_wallet_id(current_user, wallet_id)
     return [FullBalanceInfoResponse.model_validate(dto) for dto in dtos]
-

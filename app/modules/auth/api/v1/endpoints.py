@@ -1,7 +1,6 @@
 from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter
 
-from app.modules.auth.contracts.dtos import TokenInfoDTO
 from app.modules.auth.contracts.responses import TokenInfoResponse
 from app.modules.auth.contracts.schemas import LoginUserSchema
 from app.modules.auth.service.use_cases import AuthService

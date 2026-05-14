@@ -183,7 +183,10 @@ class ShowWalletService:
         return [FullWalletInfoDTO.model_validate(obj) for obj in objs]
 
     @debug_log
-    async def show_my_wallets(self, current_user: 'UserModel',) -> list['SecurityWalletInfoDTO']:
+    async def show_my_wallets(
+        self,
+        current_user: 'UserModel',
+    ) -> list['SecurityWalletInfoDTO']:
         UserGuards.require_user_exists(current_user)
 
         objs = await self._wallet_queries.select_wallets_by_user_id(current_user.user_id)

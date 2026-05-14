@@ -14,7 +14,7 @@ from app.modules.users.service.guards import UserGuards
 from app.modules.wallets.service.guards import WalletGuards
 
 if TYPE_CHECKING:
-    from app.database.models import UserModel, WalletModel
+    from app.database.models import UserModel
     from app.modules.balances.repository.commands import BalanceCommandsRepository
     from app.modules.balances.repository.queries import BalanceQueriesRepository
     from app.modules.wallets.repository.queries import WalletQueriesRepository
