@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.core.settings.jwt import JWTSettings
 from app.database.config import Settings
+from app.modules.auth.repository.commands import AuthCommandsRepository
+from app.modules.auth.repository.queries import AuthQueriesRepository
 from app.modules.auth.service.use_cases import AuthService, ManageTokenService, ShowCurrentUserService
 from app.modules.balances.repository.commands import BalanceCommandsRepository
 from app.modules.balances.repository.queries import BalanceQueriesRepository
@@ -102,6 +104,10 @@ class CommandsRepositoryProvider(Provider):
     def trn_commands(self, async_session: AsyncSession) -> TrnCommandsRepository:
         return TrnCommandsRepository(async_session)
 
+    @provide
+    def auth_commands(self, async_session: AsyncSession) -> AuthCommandsRepository:
+        return AuthCommandsRepository(async_session)
+
 
 class QueriesRepositoryProvider(Provider):
     """Провайдер для создания репозиториев запросов"""
@@ -124,6 +130,10 @@ class QueriesRepositoryProvider(Provider):
     def trn_queries(self, async_session: AsyncSession) -> TrnQueriesRepository:
         return TrnQueriesRepository(async_session)
 
+    @provide
+    def auth_queries(self, async_session: AsyncSession) -> AuthQueriesRepository:
+        return AuthQueriesRepository(async_session)
+
 
 class JWTSettingsProvider(Provider):
     """Провайдер по созданию настроек jwt токена"""
@@ -138,11 +148,11 @@ class JWTSettingsProvider(Provider):
 class ManageTokenServiceProvider(Provider):
     """Провайдер для создания сервисов по работе с токеном"""
 
-    scope = Scope.APP
+    scope = Scope.REQUEST
 
     @provide
-    def manage_service(self, jwt_settings: JWTSettings) -> ManageTokenService:
-        return ManageTokenService(jwt_settings)
+    def manage_service(self, jwt_settings: JWTSettings, auth_commands: AuthCommandsRepository) -> ManageTokenService:
+        return ManageTokenService(jwt_settings, auth_commands)
 
 
 class AuthServiceProvider(Provider):
@@ -151,8 +161,15 @@ class AuthServiceProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def auth_user(self, user_queries: UserQueriesRepository, manage_service: ManageTokenService) -> AuthService:
-        return AuthService(manage_service, user_queries)
+    def auth_user(
+        self,
+        user_queries: UserQueriesRepository,
+        manage_service: ManageTokenService,
+        auth_commands: AuthCommandsRepository,
+        auth_queries: AuthQueriesRepository,
+        jwt_settings: JWTSettings,
+    ) -> AuthService:
+        return AuthService(manage_service, user_queries, auth_commands, auth_queries, jwt_settings)
 
 
 class CurrentUserServiceProvider(Provider):

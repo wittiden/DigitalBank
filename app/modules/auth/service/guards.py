@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
-from app.modules.auth.exceptions import UserIsBlockedError, UserPassNotVerifiedError
+from app.modules.auth.exceptions import RefreshTokenNotFoundError, UserIsBlockedError, UserPassNotVerifiedError
 from app.modules.auth.service.utils import verify_pass
 
 if TYPE_CHECKING:
-    from app.database.models import UserModel
+    from app.database.models import RefreshTokenModel, UserModel
 
 
 class AuthGuards:
@@ -19,3 +19,10 @@ class AuthGuards:
     def require_verify_pass(password: str, password_hash: str) -> None:
         if not verify_pass(password, password_hash):
             raise UserPassNotVerifiedError('User password != password_hash error')
+
+    @staticmethod
+    def require_refresh_token_exist(obj: RefreshTokenModel | None) -> RefreshTokenModel:
+        if obj is None:
+            raise RefreshTokenNotFoundError('Refresh token not found error')
+
+        return obj

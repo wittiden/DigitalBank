@@ -11,7 +11,6 @@ dishka~=1.10.1
 #auth
 pyjwt[crypto]~=2.12.1
 bcrypt~=5.0.0
-python-multipart~=0.0.28
 
 #validation
 pydantic[email]~=2.13.3

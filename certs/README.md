@@ -8,7 +8,11 @@ This document explains how to generate RSA keys for JWT authentication.
 
 ```bash
 # 1. Generate private key
-openssl genrsa -out jwt-private.pem 2048
+cd certs
+openssl genrsa -out access-private.pem 2048
+openssl genrsa -out refresh-private.pem 2048
 
 # 2. Generate public key
-openssl rsa -in jwt-private.pem -pubout -out jwt-public.pem
+cd certs
+openssl rsa -in access-private.pem -pubout -out access-public.pem
+openssl rsa -in refresh-private.pem -pubout -out refresh-public.pem
