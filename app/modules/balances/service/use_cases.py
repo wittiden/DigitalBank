@@ -129,6 +129,7 @@ class DeleteBalanceService:
                     raise BalanceAmountIsNotZeroError('Balance amount is not zero error')
 
                 await self._balance_commands.delete_balance(balance)
+                break
 
         else:
             raise BalanceCurrencyNotFoundError('Balance currency not found error')
